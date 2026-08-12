@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
+  <title>PassForge — Secure Password Generator</title>
+  <meta name="description" content="Generate secure passwords and passphrases locally in your browser.">
+  <meta property="og:title" content="PassForge — Secure Password Generator">
+  <meta property="og:description" content="Generate secure passwords and passphrases locally in your browser.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <h1 id="app-title" class="logo">PassForge</h1>
+      <nav aria-label="Site">
+        <a id="github-link" href="#" rel="noopener noreferrer" target="_blank">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="container">
+    <section class="hero" aria-labelledby="hero-title">
+      <h2 id="hero-title">Password Generator</h2>
+      <p class="subtitle">Strong passwords generated locally in your browser. Nothing is sent to a server.</p>
+    </section>
+
+    <section class="card" aria-label="Password generator">
+      <fieldset class="mode-tabs">
+        <legend class="visually-hidden">Generation mode</legend>
+        <label class="mode-tab">
+          <input type="radio" name="mode" id="mode-random" value="random" checked>
+          <span>Random Password</span>
+        </label>
+        <label class="mode-tab">
+          <input type="radio" name="mode" id="mode-passphrase" value="passphrase">
+          <span>Passphrase</span>
+        </label>
+        <label class="mode-tab">
+          <input type="radio" name="mode" id="mode-pin" value="pin">
+          <span>PIN</span>
+        </label>
+      </fieldset>
+
+      <div class="output-section">
+        <label for="password-output" class="output-label">Generated Password</label>
+        <div id="password-output" class="password-output" aria-live="polite" aria-atomic="true" tabindex="0"></div>
+        <p id="validation-error" class="validation-error hidden" role="alert"></p>
+        <p id="status-message" class="status-message" aria-live="polite"></p>
+      </div>
+
+      <div class="action-row">
+        <button type="button" id="btn-copy" class="btn btn-secondary">Copy</button>
+        <button type="button" id="btn-generate" class="btn btn-primary">Generate</button>
+      </div>
+
+      <div class="strength-section" aria-label="Password strength">
+        <div class="strength-header">
+          <span>Strength</span>
+          <span id="strength-label" class="strength-label">—</span>
+        </div>
+        <div class="strength-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-labelledby="strength-label">
+          <div id="strength-bar" class="strength-bar" data-level=""></div>
+        </div>
+        <p class="hint" title="Estimated entropy assumes the password was generated randomly from the selected character set.">
+          Estimated strength based on length and character pool size.
+        </p>
+      </div>
+
+      <hr class="divider">
+
+      <div id="panel-random" class="options-panel">
+        <h3 class="panel-title">Password Requirements</h3>
+
+        <div class="form-row">
+          <label for="input-length">Length</label>
+          <input type="number" id="input-length" min="4" max="128" value="20" inputmode="numeric">
+        </div>
+
+        <div class="checkbox-grid">
+          <label class="checkbox"><input type="checkbox" id="chk-upper" checked> Uppercase letters</label>
+          <label class="checkbox"><input type="checkbox" id="chk-lower" checked> Lowercase letters</label>
+          <label class="checkbox"><input type="checkbox" id="chk-numbers" checked> Numbers</label>
+          <label class="checkbox"><input type="checkbox" id="chk-symbols" checked> Symbols</label>
+        </div>
+
+        <button type="button" id="btn-advanced-toggle" class="link-btn" aria-expanded="false" aria-controls="advanced-panel">
+          Advanced Options ▼
+        </button>
+
+        <div id="advanced-panel" class="advanced-panel hidden">
+          <div class="form-row">
+            <label for="input-min-upper">Minimum uppercase</label>
+            <input type="number" id="input-min-upper" min="0" max="128" value="1" inputmode="numeric">
+          </div>
+          <div class="form-row">
+            <label for="input-min-lower">Minimum lowercase</label>
+            <input type="number" id="input-min-lower" min="0" max="128" value="1" inputmode="numeric">
+          </div>
+          <div class="form-row">
+            <label for="input-min-numbers">Minimum numbers</label>
+            <input type="number" id="input-min-numbers" min="0" max="128" value="1" inputmode="numeric">
+          </div>
+          <div class="form-row">
+            <label for="input-min-symbols">Minimum symbols</label>
+            <input type="number" id="input-min-symbols" min="0" max="128" value="1" inputmode="numeric">
+          </div>
+          <label class="checkbox" title="Removes characters that can be difficult to distinguish, such as 0/O and 1/l/I.">
+            <input type="checkbox" id="chk-exclude-ambiguous" checked> Exclude ambiguous characters
+          </label>
+          <div class="form-row">
+            <label for="input-excluded">Characters to exclude</label>
+            <input type="text" id="input-excluded" autocomplete="off" spellcheck="false" placeholder="">
+          </div>
+          <label class="checkbox">
+            <input type="checkbox" id="chk-prevent-repeated"> Prevent repeated characters
+          </label>
+        </div>
+      </div>
+
+      <div id="panel-passphrase" class="options-panel hidden">
+        <h3 class="panel-title">Passphrase Options</h3>
+        <div class="form-row">
+          <label for="input-words">Number of words</label>
+          <input type="number" id="input-words" min="3" max="20" value="5" inputmode="numeric">
+        </div>
+        <div class="form-row">
+          <label for="input-separator">Separator</label>
+          <input type="text" id="input-separator" value="-" maxlength="3" autocomplete="off" spellcheck="false">
+        </div>
+        <label class="checkbox"><input type="checkbox" id="chk-capitalize"> Capitalize first letter of each word</label>
+        <label class="checkbox"><input type="checkbox" id="chk-add-number" checked> Add number</label>
+        <label class="checkbox"><input type="checkbox" id="chk-add-symbol"> Add symbol</label>
+        <p class="hint">More randomly selected words generally provide more security.</p>
+      </div>
+
+      <div id="panel-pin" class="options-panel hidden">
+        <h3 class="panel-title">PIN Options</h3>
+        <div class="form-row">
+          <label for="input-pin-length">Length</label>
+          <input type="number" id="input-pin-length" min="4" max="32" value="6" inputmode="numeric">
+        </div>
+        <label class="checkbox"><input type="checkbox" id="chk-pin-repeated" checked> Allow repeated digits</label>
+        <label class="checkbox"><input type="checkbox" id="chk-pin-avoid-patterns"> Avoid simple patterns (sequential or all same)</label>
+      </div>
+
+      <div class="utility-row">
+        <label for="theme-select">Theme</label>
+        <select id="theme-select" aria-label="Color theme">
+          <option value="system" selected>System</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+        <button type="button" id="btn-reset" class="btn btn-ghost">Reset to defaults</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>PassForge</strong> is open source.</p>
+      <p>Your passwords are generated locally in your browser and are never sent to a server.</p>
+      <p><a id="footer-github-link" href="#">View source</a></p>
+    </div>
+  </footer>
+
+  <script src="./wasm_exec.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

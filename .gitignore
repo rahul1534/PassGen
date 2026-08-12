@@ -1,0 +1,26 @@
+# Binaries
+/dist/
+*.wasm
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node (optional smoke tests)
+node_modules/
+package-lock.json
