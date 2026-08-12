@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"syscall/js"
 
-	"github.com/rahultaneja/PassGen/internal/config"
-	"github.com/rahultaneja/PassGen/internal/generator"
-	"github.com/rahultaneja/PassGen/internal/random"
+	"github.com/rahul1534/PassGen/internal/config"
+	"github.com/rahul1534/PassGen/internal/generator"
+	"github.com/rahul1534/PassGen/internal/random"
 )
 
 type mode int

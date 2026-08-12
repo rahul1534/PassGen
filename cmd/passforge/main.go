@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"syscall/js"
 
-	"github.com/rahultaneja/PassGen/internal/web"
+	"github.com/rahul1534/PassGen/internal/web"
 )
 
 func main() {

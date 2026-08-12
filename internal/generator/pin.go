@@ -1,7 +1,7 @@
 package generator
 
 import (
-	"github.com/rahultaneja/PassGen/internal/random"
+	"github.com/rahul1534/PassGen/internal/random"
 )
 
 // PINOptions configures numeric PIN generation.

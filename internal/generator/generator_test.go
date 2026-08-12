@@ -5,7 +5,7 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/rahultaneja/PassGen/internal/random"
+	"github.com/rahul1534/PassGen/internal/random"
 )
 
 func testWords() []string {

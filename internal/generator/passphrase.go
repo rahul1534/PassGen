@@ -3,8 +3,8 @@ package generator
 import (
 	"strings"
 
-	"github.com/rahultaneja/PassGen/internal/random"
-	"github.com/rahultaneja/PassGen/wordlist"
+	"github.com/rahul1534/PassGen/internal/random"
+	"github.com/rahul1534/PassGen/wordlist"
 )
 
 // PassphraseOptions configures passphrase generation.

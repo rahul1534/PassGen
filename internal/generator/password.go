@@ -3,7 +3,7 @@ package generator
 import (
 	"strings"
 
-	"github.com/rahultaneja/PassGen/internal/random"
+	"github.com/rahul1534/PassGen/internal/random"
 )
 
 // PasswordOptions configures random password generation.

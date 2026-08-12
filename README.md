@@ -46,7 +46,7 @@ PassForge is a privacy-first, open-source password generator that runs entirely 
 ### Run locally
 
 ```bash
-git clone https://github.com/rahultaneja/PassGen.git
+git clone https://github.com/rahul1534/PassGen.git
 cd PassGen
 make build
 make dev
@@ -98,7 +98,7 @@ Repository-specific values live in `internal/config/config.go`:
 ```go
 const (
     AppName   = "PassForge"
-    GitHubURL = "https://github.com/rahultaneja/PassGen"
+    GitHubURL = "https://github.com/rahul1534/PassGen"
 )
 ```
 
