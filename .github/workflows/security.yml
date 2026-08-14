@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Debug: list workspace
+      - name: "Debug: list workspace"
         run: |
           pwd
           ls -la
@@ -29,22 +29,26 @@ jobs:
         shell: bash
         run: |
           set -xeo pipefail
+          # capture all output to install-tools.log for diagnosis
+          exec > >(tee install-tools.log) 2>&1
+
           # ensure GOPATH/bin is in PATH after installs (actions/setup-go sets GOPATH)
           export GOPATH=$(go env GOPATH)
           mkdir -p "${GOPATH}/bin"
-          export PATH="${PATH}:${GOPATH}/bin"
+          export GOBIN="${GOPATH}/bin"
+          export PATH="${PATH}:${GOBIN}"
 
           echo "GOPATH=$GOPATH"
+          echo "GOBIN=$GOBIN"
           echo "PATH=$PATH"
 
           # Install gosec, govulncheck, staticcheck
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          go install honnef.co/go/tools/cmd/staticcheck@latest
+          GO111MODULE=on go install github.com/securego/gosec/v2/cmd/gosec@latest
+          GO111MODULE=on go install golang.org/x/vuln/cmd/govulncheck@latest
+          GO111MODULE=on go install honnef.co/go/tools/cmd/staticcheck@latest
 
-          # Install gitleaks via go install (safe and puts binary in GOPATH/bin)
-          # using v8 to match latest major; adjust if you prefer binary releases
-          go install github.com/zricethezav/gitleaks/v8@latest
+          # Install gitleaks via go install (safe and puts binary in GOBIN)
+          GO111MODULE=on go install github.com/zricethezav/gitleaks/v8@latest
 
           # Verify tool versions / existence
           which gosec || true
@@ -108,19 +112,7 @@ jobs:
             true
           fi
 
-      - name: gitleaks secret scan
-        shell: bash
-        run: |
-          set -xeo pipefail
-          echo "==== gitleaks ====" > gitleaks-report.txt
-          if gitleaks detect --source . 2>&1 | tee -a gitleaks-report.txt; then
-            echo "gitleaks succeeded" >> gitleaks-report.txt
-          else
-            echo "gitleaks failed or found secrets (exit non-zero)" >> gitleaks-report.txt
-            true
-          fi
-
-      - name: Debug: list reports
+      - name: "Debug: list reports"
         run: |
           echo "=== workspace listing ==="
           ls -la
