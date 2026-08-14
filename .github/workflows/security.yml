@@ -30,6 +30,7 @@ jobs:
           go install honnef.co/go/tools/cmd/staticcheck@latest
           # gitleaks (for secrets)
           curl -sSfL https://github.com/zricethezav/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin gitleaks
+
       - name: Run gosec
         run: |
           echo "==== gosec ===="
