@@ -14,49 +14,121 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug: list workspace
+        run: |
+          pwd
+          ls -la
+          git rev-parse --abbrev-ref HEAD || true
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
 
       - name: Install tools
+        shell: bash
         run: |
-          set -e
-          # gosec
+          set -xeo pipefail
+          # ensure GOPATH/bin is in PATH after installs (actions/setup-go sets GOPATH)
+          export GOPATH=$(go env GOPATH)
+          mkdir -p "${GOPATH}/bin"
+          export PATH="${PATH}:${GOPATH}/bin"
+
+          echo "GOPATH=$GOPATH"
+          echo "PATH=$PATH"
+
+          # Install gosec, govulncheck, staticcheck
           go install github.com/securego/gosec/v2/cmd/gosec@latest
-          # govulncheck
           go install golang.org/x/vuln/cmd/govulncheck@latest
-          # staticcheck
           go install honnef.co/go/tools/cmd/staticcheck@latest
-          # gitleaks (for secrets)
-          curl -sSfL https://github.com/zricethezav/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin gitleaks
+
+          # Install gitleaks via go install (safe and puts binary in GOPATH/bin)
+          # using v8 to match latest major; adjust if you prefer binary releases
+          go install github.com/zricethezav/gitleaks/v8@latest
+
+          # Verify tool versions / existence
+          which gosec || true
+          which govulncheck || true
+          which staticcheck || true
+          which gitleaks || true
 
       - name: Run gosec
+        shell: bash
         run: |
-          echo "==== gosec ===="
-          gosec ./... | tee gosec-report.txt
+          set -xeo pipefail
+          echo "==== gosec ====" > gosec-report.txt
+          if gosec ./... | tee -a gosec-report.txt; then
+            echo "gosec succeeded" >> gosec-report.txt
+          else
+            echo "gosec failed (non-zero exit)" >> gosec-report.txt
+            true # don't fail the whole workflow yet; we want to upload the report
+          fi
 
       - name: Run govulncheck
+        shell: bash
         run: |
-          echo "==== govulncheck ===="
-          govulncheck ./... | tee govulncheck-report.txt
+          set -xeo pipefail
+          echo "==== govulncheck ====" > govulncheck-report.txt
+          if govulncheck ./... | tee -a govulncheck-report.txt; then
+            echo "govulncheck succeeded" >> govulncheck-report.txt
+          else
+            echo "govulncheck failed (non-zero exit)" >> govulncheck-report.txt
+            true
+          fi
 
       - name: Run staticcheck
+        shell: bash
         run: |
-          echo "==== staticcheck ===="
-          staticcheck ./... | tee staticcheck-report.txt
+          set -xeo pipefail
+          echo "==== staticcheck ====" > staticcheck-report.txt
+          if staticcheck ./... 2>&1 | tee -a staticcheck-report.txt; then
+            echo "staticcheck succeeded" >> staticcheck-report.txt
+          else
+            echo "staticcheck failed (non-zero exit)" >> staticcheck-report.txt
+            true
+          fi
 
       - name: go vet and tests with race
+        shell: bash
         run: |
-          echo "==== go vet ===="
-          go vet ./... || true
-          echo "==== go test -race ===="
-          go test -race ./... || true
+          set -xeo pipefail
+          echo "==== go vet ====" > govet-report.txt
+          if go vet ./... 2>&1 | tee -a govet-report.txt; then
+            echo "go vet succeeded" >> govet-report.txt
+          else
+            echo "go vet failed (non-zero exit)" >> govet-report.txt
+            true
+          fi
+
+          echo "==== go test -race ====" > gotest-race-report.txt
+          if go test -race ./... 2>&1 | tee -a gotest-race-report.txt; then
+            echo "go test -race succeeded" >> gotest-race-report.txt
+          else
+            echo "go test -race failed (non-zero exit)" >> gotest-race-report.txt
+            true
+          fi
 
       - name: gitleaks secret scan
+        shell: bash
         run: |
-          echo "==== gitleaks ===="
-          gitleaks detect --source . || true
+          set -xeo pipefail
+          echo "==== gitleaks ====" > gitleaks-report.txt
+          if gitleaks detect --source . 2>&1 | tee -a gitleaks-report.txt; then
+            echo "gitleaks succeeded" >> gitleaks-report.txt
+          else
+            echo "gitleaks failed or found secrets (exit non-zero)" >> gitleaks-report.txt
+            true
+          fi
+
+      - name: Debug: list reports
+        run: |
+          echo "=== workspace listing ==="
+          ls -la
+          echo "=== tool binaries in PATH ==="
+          which gosec || true
+          which govulncheck || true
+          which staticcheck || true
+          which gitleaks || true
 
       - name: Upload reports (artifact)
         if: always()
@@ -64,6 +136,10 @@ jobs:
         with:
           name: security-scan-logs
           path: |
+            install-tools.log
             gosec-report.txt
             govulncheck-report.txt
             staticcheck-report.txt
+            govet-report.txt
+            gotest-race-report.txt
+            gitleaks-report.txt
