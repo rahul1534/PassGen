@@ -5,8 +5,7 @@ build:
 	@./scripts/build.sh
 
 dev: build
-	@echo "Serving dist/ at http://localhost:$${PORT:-8080}"
-	@cd dist && python3 ../scripts/serve.py
+	@go run ./cmd/devserver -dir dist -port $${PORT:-8080}
 
 test:
 	@go test ./...

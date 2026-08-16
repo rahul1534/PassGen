@@ -17,3 +17,4 @@ All notable changes to PassForge are documented in this file.
 - Default: exclude ambiguous characters is **off** (better entropy for copy/paste use)
 - Strength label clarified as **Estimated strength**
 - Specs.md relocated to `docs/specification.md`
+- Local `make dev` server is Go (`cmd/devserver`) instead of Python

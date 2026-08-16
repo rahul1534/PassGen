@@ -3,7 +3,6 @@
 ## Prerequisites
 
 - Go 1.25+
-- Python 3 (local static server only)
 - `ripgrep` (`rg`) for privacy checks (optional locally; installed in CI)
 
 ## Commands
@@ -11,7 +10,7 @@
 ```bash
 make test     # go test ./...
 make build    # produce dist/
-make dev      # build + serve dist/ on PORT (default 8080)
+make dev      # build + serve dist/ with Go (PORT, default 8080)
 make clean    # remove dist/
 make privacy  # privacy regression checks
 ```
