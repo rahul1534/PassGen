@@ -32,8 +32,10 @@ Then open http://localhost:8080
 - `internal/generator/` — password, passphrase, and PIN generation (browser-independent)
 - `internal/random/` — secure and deterministic random sources
 - `internal/web/` — DOM integration for the browser
-- `web/` — static HTML, CSS, and favicon
+- `web/` — static HTML, CSS, bootstrap JS, and favicon
 - `wordlist/` — bundled EFF word list for passphrases
+- `docs/` — architecture, security, threat model, development, specification
+- `.github/workflows/` — CI and GitHub Pages deploy
 
 ## Guidelines
 
@@ -42,6 +44,8 @@ Then open http://localhost:8080
 - Use `crypto.getRandomValues()` for production randomness; use `DeterministicSource` only in tests.
 - Match existing code style and keep changes focused.
 - Add or update tests for generator behavior changes.
+- Run `make test` and `make privacy` before opening a PR.
+- See [docs/development.md](docs/development.md) for contributor workflow.
 
 ## Pull Requests
 

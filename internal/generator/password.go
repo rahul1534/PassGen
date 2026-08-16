@@ -34,7 +34,7 @@ func DefaultPasswordOptions() PasswordOptions {
 		MinLowercase:     1,
 		MinNumbers:       1,
 		MinSymbols:       1,
-		ExcludeAmbiguous: true,
+		ExcludeAmbiguous: false,
 	}
 }
 
@@ -46,7 +46,7 @@ func StrongPasswordOptions(length int) PasswordOptions {
 	opts.MinLowercase = 1
 	opts.MinNumbers = 1
 	opts.MinSymbols = 1
-	opts.ExcludeAmbiguous = true
+	opts.ExcludeAmbiguous = false
 	return opts
 }
 

@@ -15,6 +15,14 @@ PassForge is designed so that passwords are generated entirely in your browser a
 
 Production password generation uses the browser Web Crypto API (`crypto.getRandomValues()`). The application fails safely if secure randomness is unavailable rather than falling back to insecure sources.
 
+## Content Security Policy
+
+The app ships a strict CSP. Go’s WebAssembly runtime requires `'unsafe-eval'` / `'wasm-unsafe-eval'`. `connect-src 'self'` allows loading local `app.wasm` and blocks third-party network requests. See comments in `web/index.html` and [docs/architecture.md](docs/architecture.md).
+
+## Automated checks
+
+CI runs unit/property tests, `go vet`, a privacy regression script (`scripts/privacy-check.sh`), and `govulncheck`.
+
 ## Reporting a Vulnerability
 
 If you discover a security issue, please report it responsibly:

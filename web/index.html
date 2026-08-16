@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--
+    CSP notes:
+    - 'wasm-unsafe-eval' / 'unsafe-eval': required by the Go WebAssembly runtime (wasm_exec.js).
+    - connect-src 'self': allows fetch of local app.wasm only; blocks third-party exfiltration.
+    - No CDN scripts/fonts; all assets are same-origin.
+  -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
   <title>PassForge — Secure Password Generator</title>
   <meta name="description" content="Generate secure passwords and passphrases locally in your browser.">
@@ -59,16 +65,17 @@
         <button type="button" id="btn-generate" class="btn btn-primary">Generate</button>
       </div>
 
-      <div class="strength-section" aria-label="Password strength">
+      <div class="strength-section" aria-label="Estimated password strength">
         <div class="strength-header">
-          <span>Strength</span>
+          <span>Estimated strength</span>
           <span id="strength-label" class="strength-label">—</span>
         </div>
         <div class="strength-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-labelledby="strength-label">
           <div id="strength-bar" class="strength-bar" data-level=""></div>
         </div>
-        <p class="hint" title="Estimated entropy assumes the password was generated randomly from the selected character set.">
-          Estimated strength based on length and character pool size.
+        <p id="entropy-bits" class="hint"></p>
+        <p class="hint" title="This estimate assumes the password was generated randomly from the selected character set. It does not account for site-specific password policies, breached-password lists, or human choices.">
+          Estimate assumes uniform random generation from the selected pool. It is not a guarantee for every website.
         </p>
       </div>
 
@@ -110,9 +117,10 @@
             <label for="input-min-symbols">Minimum symbols</label>
             <input type="number" id="input-min-symbols" min="0" max="128" value="1" inputmode="numeric">
           </div>
-          <label class="checkbox" title="Removes characters that can be difficult to distinguish, such as 0/O and 1/l/I.">
-            <input type="checkbox" id="chk-exclude-ambiguous" checked> Exclude ambiguous characters
+          <label class="checkbox" title="Useful when passwords need to be read or typed manually. Reduces the character pool (and entropy) slightly.">
+            <input type="checkbox" id="chk-exclude-ambiguous"> Exclude ambiguous characters
           </label>
+          <p class="hint">Useful when passwords need to be read or typed manually.</p>
           <div class="form-row">
             <label for="input-excluded">Characters to exclude</label>
             <input type="text" id="input-excluded" autocomplete="off" spellcheck="false" placeholder="">
@@ -136,11 +144,15 @@
         <label class="checkbox"><input type="checkbox" id="chk-capitalize"> Capitalize first letter of each word</label>
         <label class="checkbox"><input type="checkbox" id="chk-add-number" checked> Add number</label>
         <label class="checkbox"><input type="checkbox" id="chk-add-symbol"> Add symbol</label>
-        <p class="hint">More randomly selected words generally provide more security.</p>
+        <p class="hint">Security depends primarily on the number of randomly selected words, not on adding arbitrary symbols.</p>
       </div>
 
       <div id="panel-pin" class="options-panel hidden">
         <h3 class="panel-title">PIN Options</h3>
+        <p class="warning" role="note">
+          PINs provide much less entropy than passwords. Use them only where the system requires a numeric code.
+          A 6-digit PIN has about 1,000,000 possible values.
+        </p>
         <div class="form-row">
           <label for="input-pin-length">Length</label>
           <input type="number" id="input-pin-length" min="4" max="32" value="6" inputmode="numeric">

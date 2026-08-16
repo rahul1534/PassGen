@@ -1,4 +1,4 @@
-.PHONY: build dev test clean
+.PHONY: build dev test clean privacy
 
 build:
 	@chmod +x scripts/build.sh
@@ -10,6 +10,10 @@ dev: build
 
 test:
 	@go test ./...
+
+privacy:
+	@chmod +x scripts/privacy-check.sh
+	@./scripts/privacy-check.sh
 
 clean:
 	@rm -rf dist

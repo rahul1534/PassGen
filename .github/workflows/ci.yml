@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Format check
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "Unformatted files:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./... -count=1 -cover
+
+      - name: Race
+        run: go test ./... -race -count=1
+
+      - name: Build WASM
+        run: make build
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Privacy regression checks
+        run: bash scripts/privacy-check.sh
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Vulnerability scan
+        run: govulncheck ./...
+
+      - name: Forbid math/rand in generator paths
+        run: |
+          matches=$(grep -RIn --include='*.go' 'math/rand' internal/generator internal/random cmd || true)
+          filtered=$(echo "$matches" | grep -v '_test\.go' | grep -v 'deterministic' || true)
+          if [ -n "$filtered" ]; then
+            echo "math/rand must not be used for password generation"
+            echo "$filtered"
+            exit 1
+          fi
+          echo "No math/rand usage in production generation paths"

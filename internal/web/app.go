@@ -323,6 +323,15 @@ func (a *App) render(strength generator.StrengthResult) {
 		strengthLabel.Set("textContent", strength.Level.String())
 	}
 
+	entropyEl := a.doc.Call("getElementById", "entropy-bits")
+	if !entropyEl.IsNull() {
+		if a.output == "" {
+			entropyEl.Set("textContent", "")
+		} else {
+			entropyEl.Set("textContent", fmt.Sprintf("~%.0f bits estimated entropy", strength.Entropy))
+		}
+	}
+
 	strengthBar := a.doc.Call("getElementById", "strength-bar")
 	if !strengthBar.IsNull() {
 		strengthBar.Set("style", fmt.Sprintf("width: %d%%", strength.Level.BarWidth()))
