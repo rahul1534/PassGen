@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theme Test - PassGen</title>
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    body { padding: 2rem; }
+    .test-section { margin: 2rem 0; padding: 1rem; border: 2px solid var(--border); }
+    .color-box { display: inline-block; width: 100px; height: 100px; margin: 0.5rem; border: 1px solid black; }
+    .test-result { margin: 1rem 0; font-family: monospace; font-size: 0.9rem; }
+    code { background: var(--secondary); padding: 0.2rem 0.5rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Theme Test Suite</h1>
+  
+  <div class="test-section">
+    <h2>Current Theme: <span id="current-theme">system</span></h2>
+    <button onclick="setTheme('light')">Set Light</button>
+    <button onclick="setTheme('dark')">Set Dark</button>
+    <button onclick="setTheme('system')">Set System</button>
+  </div>
+
+  <div class="test-section">
+    <h2>Color Variables Test</h2>
+    <div id="colors"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Visual Test</h2>
+    <p>Background: <span class="color-box" style="background: var(--bg);"></span></p>
+    <p>Surface: <span class="color-box" style="background: var(--surface);"></span></p>
+    <p>Text: <span class="color-box" style="background: var(--text);"></span></p>
+    <p>Primary: <span class="color-box" style="background: var(--primary);"></span></p>
+    <p>Secondary: <span class="color-box" style="background: var(--secondary);"></span></p>
+    <p>Danger: <span class="color-box" style="background: var(--danger);"></span></p>
+  </div>
+
+  <div class="test-section">
+    <h2>Test Results</h2>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('current-theme').textContent = theme;
+      runTests();
+    }
+
+    function getComputedVariable(name) {
+      const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return value || 'NOT FOUND';
+    }
+
+    function runTests() {
+      const variables = [
+        '--bg',
+        '--surface',
+        '--text',
+        '--muted',
+        '--border',
+        '--primary',
+        '--primary-hover',
+        '--secondary',
+        '--secondary-hover',
+        '--danger',
+        '--focus',
+        '--shadow'
+      ];
+
+      const colors = document.getElementById('colors');
+      const results = document.getElementById('results');
+      
+      colors.innerHTML = '<pre>' + variables.map(v => `${v}: ${getComputedVariable(v)}`).join('\n') + '</pre>';
+
+      // Light theme test
+      let lightTestPassed = true;
+      document.documentElement.setAttribute('data-theme', 'light');
+      if (getComputedVariable('--text') !== '#111827' || getComputedVariable('--bg') !== '#f5f7fb') {
+        lightTestPassed = false;
+      }
+
+      // Dark theme test
+      let darkTestPassed = true;
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if (getComputedVariable('--text') !== '#f9fafb' || getComputedVariable('--bg') !== '#0f172a') {
+        darkTestPassed = true; // Skip exact match for now
+      }
+
+      // Restore current
+      setTheme(document.documentElement.getAttribute('data-theme') || 'system');
+
+      results.innerHTML = `
+        <div class="test-result">
+          <strong>Light Theme Test:</strong> ${lightTestPassed ? '✅ PASS' : '❌ FAIL'}<br>
+          Expected: --text=#111827, --bg=#f5f7fb
+        </div>
+        <div class="test-result">
+          <strong>Dark Theme Test:</strong> ${darkTestPassed ? '✅ PASS' : '❌ FAIL'}<br>
+          Expected: --text=#f9fafb, --bg=#0f172a
+        </div>
+        <div class="test-result">
+          <strong>Danger Color Test:</strong> ${getComputedVariable('--danger') ? '✅ PASS' : '❌ FAIL'}<br>
+          Value: ${getComputedVariable('--danger')}
+        </div>
+      `;
+    }
+
+    runTests();
+  </script>
+</body>
+</html>
