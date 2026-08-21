@@ -30,17 +30,17 @@ const (
 
 // App manages UI state and browser integration.
 type App struct {
-	doc     js.Value
-	rng     random.Source
-	mode    mode
-	theme   theme
-	password generator.PasswordOptions
+	doc        js.Value
+	rng        random.Source
+	mode       mode
+	theme      theme
+	password   generator.PasswordOptions
 	passphrase generator.PassphraseOptions
-	pin     generator.PINOptions
-	output  string
-	errorMsg string
-	copyReset js.Func
-	callbacks []js.Func
+	pin        generator.PINOptions
+	output     string
+	errorMsg   string
+	copyReset  js.Func
+	callbacks  []js.Func
 }
 
 // NewApp creates the application and binds DOM events.
@@ -270,8 +270,8 @@ func (a *App) generate() {
 	a.errorMsg = ""
 
 	var (
-		result string
-		err    error
+		result   string
+		err      error
 		strength generator.StrengthResult
 	)
 

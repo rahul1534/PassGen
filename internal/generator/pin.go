@@ -14,8 +14,8 @@ type PINOptions struct {
 // DefaultPINOptions returns recommended PIN defaults.
 func DefaultPINOptions() PINOptions {
 	return PINOptions{
-		Length:              6,
-		AllowRepeatedDigits: true,
+		Length:                 6,
+		AllowRepeatedDigits:    true,
 		AvoidAmbiguousPatterns: false,
 	}
 }

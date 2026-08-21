@@ -35,15 +35,15 @@ func TestGeneratePasswordLength(t *testing.T) {
 func TestGeneratePasswordMinimums(t *testing.T) {
 	src := random.NewDeterministicSource(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
 	opts := PasswordOptions{
-		Length:         20,
-		Uppercase:      true,
-		Lowercase:      true,
-		Numbers:        true,
-		Symbols:        true,
-		MinUppercase:   2,
-		MinLowercase:   2,
-		MinNumbers:     2,
-		MinSymbols:     2,
+		Length:           20,
+		Uppercase:        true,
+		Lowercase:        true,
+		Numbers:          true,
+		Symbols:          true,
+		MinUppercase:     2,
+		MinLowercase:     2,
+		MinNumbers:       2,
+		MinSymbols:       2,
 		ExcludeAmbiguous: true,
 	}
 

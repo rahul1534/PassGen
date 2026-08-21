@@ -12,10 +12,10 @@ var (
 )
 
 const (
-	MinPasswordLength = 4
-	MaxPasswordLength = 128
-	MinPINLength      = 4
-	MaxPINLength      = 32
+	MinPasswordLength  = 4
+	MaxPasswordLength  = 128
+	MinPINLength       = 4
+	MaxPINLength       = 32
 	MinPassphraseWords = 3
 	MaxPassphraseWords = 20
 )
