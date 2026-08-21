@@ -5,6 +5,7 @@ import "errors"
 var ErrRandomSourceFailure = errors.New("secure random source unavailable")
 
 // Source provides cryptographically secure random integers and shuffling.
+// Production implementations should use a crypto/rand-backed Source.
 type Source interface {
 	RandomInt(max int) (int, error)
 }
