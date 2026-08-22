@@ -3,12 +3,12 @@ package generator
 import "errors"
 
 var (
-	ErrInvalidLength      = errors.New("invalid password length")
-	ErrNoCharacterSet     = errors.New("no character set selected")
-	ErrImpossibleMinimums = errors.New("minimum requirements exceed length")
-	ErrNoAvailableChars   = errors.New("no available characters")
-	ErrInvalidPINLength   = errors.New("invalid PIN length")
-	ErrInvalidWordCount   = errors.New("invalid word count")
+	ErrInvalidLength                 = errors.New("invalid password length")
+	ErrNoCharacterSet                = errors.New("no character set selected")
+	ErrImpossibleMinimums            = errors.New("minimum requirements exceed length")
+	ErrNoAvailableChars              = errors.New("no available characters")
+	ErrInvalidPINLength              = errors.New("invalid PIN length")
+	ErrInvalidWordCount              = errors.New("invalid word count")
 	ErrUnableToSatisfyPINConstraints = errors.New("unable to satisfy PIN constraints")
 )
 
