@@ -16,6 +16,7 @@ type mode int
 
 const (
 	modeRandom mode = iota
+	modeStrong
 	modePassphrase
 	modePIN
 )
@@ -30,17 +31,18 @@ const (
 
 // App manages UI state and browser integration.
 type App struct {
-	doc        js.Value
-	rng        random.Source
-	mode       mode
-	theme      theme
-	password   generator.PasswordOptions
-	passphrase generator.PassphraseOptions
-	pin        generator.PINOptions
-	output     string
-	errorMsg   string
-	copyReset  js.Func
-	callbacks  []js.Func
+	doc            js.Value
+	rng            random.Source
+	mode           mode
+	theme          theme
+	password       generator.PasswordOptions
+	strongPassword generator.PasswordOptions
+	passphrase     generator.PassphraseOptions
+	pin            generator.PINOptions
+	output         string
+	errorMsg       string
+	copyReset      js.Func
+	callbacks      []js.Func
 }
 
 // NewApp creates the application and binds DOM events.
@@ -51,13 +53,14 @@ func NewApp() (*App, error) {
 	}
 
 	app := &App{
-		doc:        js.Global().Get("document"),
-		rng:        src,
-		mode:       modeRandom,
-		password:   generator.DefaultPasswordOptions(),
-		passphrase: generator.DefaultPassphraseOptions(),
-		pin:        generator.DefaultPINOptions(),
-		theme:      themeSystem,
+		doc:            js.Global().Get("document"),
+		rng:            src,
+		mode:           modeRandom,
+		password:       generator.DefaultPasswordOptions(),
+		strongPassword: generator.StrongPasswordOptions(generator.DefaultPasswordOptions().Length),
+		passphrase:     generator.DefaultPassphraseOptions(),
+		pin:            generator.DefaultPINOptions(),
+		theme:          themeSystem,
 	}
 
 	app.bindEvents()
@@ -74,10 +77,12 @@ func (a *App) bindEvents() {
 	a.onClick("btn-advanced-toggle", a.toggleAdvanced)
 
 	a.onChange("mode-random", func() { a.setMode(modeRandom) })
+	a.onChange("mode-strong", func() { a.setMode(modeStrong) })
 	a.onChange("mode-passphrase", func() { a.setMode(modePassphrase) })
 	a.onChange("mode-pin", func() { a.setMode(modePIN) })
 
 	a.onInput("input-length", a.readPasswordControls)
+	a.onInput("input-strong-length", a.readStrongPasswordControls)
 	a.onInput("input-min-upper", a.readPasswordControls)
 	a.onInput("input-min-lower", a.readPasswordControls)
 	a.onInput("input-min-numbers", a.readPasswordControls)
@@ -159,6 +164,7 @@ func (a *App) setMode(m mode) {
 func (a *App) showPanel() {
 	panels := map[mode]string{
 		modeRandom:     "panel-random",
+		modeStrong:     "panel-strong",
 		modePassphrase: "panel-passphrase",
 		modePIN:        "panel-pin",
 	}
@@ -176,6 +182,7 @@ func (a *App) showPanel() {
 
 	modeIDs := map[mode]string{
 		modeRandom:     "mode-random",
+		modeStrong:     "mode-strong",
 		modePassphrase: "mode-passphrase",
 		modePIN:        "mode-pin",
 	}
@@ -189,6 +196,7 @@ func (a *App) showPanel() {
 
 func (a *App) readAllControls() {
 	a.readPasswordControls()
+	a.readStrongPasswordControls()
 	a.readPassphraseControls()
 	a.readPINControls()
 }
@@ -206,6 +214,10 @@ func (a *App) readPasswordControls() {
 	a.password.ExcludeAmbiguous = a.checked("chk-exclude-ambiguous")
 	a.password.PreventRepeated = a.checked("chk-prevent-repeated")
 	a.password.ExcludedCharacters = generator.NormalizeExcludedChars(a.stringValue("input-excluded"))
+}
+
+func (a *App) readStrongPasswordControls() {
+	a.strongPassword.Length = a.intValue("input-strong-length", a.strongPassword.Length)
 }
 
 func (a *App) readPassphraseControls() {
@@ -240,6 +252,7 @@ func (a *App) readTheme() {
 
 func (a *App) syncControlsFromState() {
 	a.setIntValue("input-length", a.password.Length)
+	a.setIntValue("input-strong-length", a.strongPassword.Length)
 	a.setChecked("chk-upper", a.password.Uppercase)
 	a.setChecked("chk-lower", a.password.Lowercase)
 	a.setChecked("chk-numbers", a.password.Numbers)
@@ -280,6 +293,11 @@ func (a *App) generate() {
 		result, err = generator.GeneratePassword(a.rng, a.password)
 		if err == nil {
 			strength = generator.EstimatePasswordStrength(result, a.password)
+		}
+	case modeStrong:
+		result, err = generator.GeneratePassword(a.rng, a.strongPassword)
+		if err == nil {
+			strength = generator.EstimatePasswordStrength(result, a.strongPassword)
 		}
 	case modePassphrase:
 		result, err = generator.GeneratePassphrase(a.rng, a.passphrase)
@@ -388,6 +406,7 @@ func (a *App) setStatus(msg string) {
 func (a *App) resetDefaults() {
 	a.mode = modeRandom
 	a.password = generator.DefaultPasswordOptions()
+	a.strongPassword = generator.StrongPasswordOptions(generator.DefaultPasswordOptions().Length)
 	a.passphrase = generator.DefaultPassphraseOptions()
 	a.pin = generator.DefaultPINOptions()
 	a.theme = themeSystem

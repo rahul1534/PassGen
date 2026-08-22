@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+git diff --cached --name-only --diff-filter=ACM -- '*.go' |
+while IFS= read -r file; do
+	[ -f "$file" ] || continue
+	gofmt -w "$file"
+	git add "$file"
+done
