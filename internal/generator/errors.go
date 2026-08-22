@@ -9,6 +9,7 @@ var (
 	ErrNoAvailableChars   = errors.New("no available characters")
 	ErrInvalidPINLength   = errors.New("invalid PIN length")
 	ErrInvalidWordCount   = errors.New("invalid word count")
+	ErrUnableToSatisfyPINConstraints = errors.New("unable to satisfy PIN constraints")
 )
 
 const (

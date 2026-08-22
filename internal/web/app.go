@@ -16,6 +16,7 @@ type mode int
 
 const (
 	modeRandom mode = iota
+	modeStrong
 	modePassphrase
 	modePIN
 )
@@ -74,6 +75,7 @@ func (a *App) bindEvents() {
 	a.onClick("btn-advanced-toggle", a.toggleAdvanced)
 
 	a.onChange("mode-random", func() { a.setMode(modeRandom) })
+	a.onChange("mode-strong", func() { a.setMode(modeStrong) })
 	a.onChange("mode-passphrase", func() { a.setMode(modePassphrase) })
 	a.onChange("mode-pin", func() { a.setMode(modePIN) })
 
@@ -159,6 +161,7 @@ func (a *App) setMode(m mode) {
 func (a *App) showPanel() {
 	panels := map[mode]string{
 		modeRandom:     "panel-random",
+		modeStrong:     "panel-strong",
 		modePassphrase: "panel-passphrase",
 		modePIN:        "panel-pin",
 	}
@@ -176,6 +179,7 @@ func (a *App) showPanel() {
 
 	modeIDs := map[mode]string{
 		modeRandom:     "mode-random",
+		modeStrong:     "panel-strong",
 		modePassphrase: "mode-passphrase",
 		modePIN:        "mode-pin",
 	}
@@ -277,6 +281,11 @@ func (a *App) generate() {
 
 	switch a.mode {
 	case modeRandom:
+		result, err = generator.GeneratePassword(a.rng, a.strongPassword)
+		if err == nil {
+			strength = generator.EstimatePasswordStrength(result, a.strongPassword)
+		}
+	case modeStrong:
 		result, err = generator.GeneratePassword(a.rng, a.password)
 		if err == nil {
 			strength = generator.EstimatePasswordStrength(result, a.password)
@@ -388,6 +397,7 @@ func (a *App) setStatus(msg string) {
 func (a *App) resetDefaults() {
 	a.mode = modeRandom
 	a.password = generator.DefaultPasswordOptions()
+	a.strongPassword = generator.StrongPasswordOptions()
 	a.passphrase = generator.DefaultPassphraseOptions()
 	a.pin = generator.DefaultPINOptions()
 	a.theme = themeSystem

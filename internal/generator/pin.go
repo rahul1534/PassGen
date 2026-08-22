@@ -44,7 +44,7 @@ func GeneratePIN(src random.Source, opts PINOptions) (string, error) {
 			return pin, nil
 		}
 	}
-	return generatePINOnce(src, opts)
+	return "", ErrUnableToSatisfyPINConstraints
 }
 
 func generatePINOnce(src random.Source, opts PINOptions) (string, error) {
