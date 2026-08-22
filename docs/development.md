@@ -8,12 +8,17 @@
 ## Commands
 
 ```bash
+make setup-hooks # enable the pre-commit gofmt hook
 make test     # go test ./...
+make format   # format all tracked Go files
 make build    # produce dist/
 make dev      # build + serve dist/ with Go (PORT, default 8080)
 make clean    # remove dist/
 make privacy  # privacy regression checks
 ```
+
+Run `make setup-hooks` once after cloning. The pre-commit hook formats staged
+Go files automatically and stages any formatting changes before the commit.
 
 ## Testing notes
 

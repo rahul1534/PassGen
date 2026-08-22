@@ -6,19 +6,27 @@ Thank you for your interest in contributing!
 
 1. Install Go 1.25 or later.
 2. Clone the repository.
-3. Run tests:
+3. Enable the repository's Git hooks:
+
+```bash
+make setup-hooks
+```
+
+The pre-commit hook runs `gofmt` on staged Go files before each commit.
+
+4. Run tests:
 
 ```bash
 make test
 ```
 
-4. Build the WebAssembly app:
+5. Build the WebAssembly app:
 
 ```bash
 make build
 ```
 
-5. Preview locally:
+6. Preview locally:
 
 ```bash
 make dev
