@@ -44,7 +44,7 @@
           <span>Random Password</span>
         </label>
         <label class="mode-tab">
-          <input type="radio" name="mode" id="mode-strong" value="strong" checked>
+          <input type="radio" name="mode" id="mode-strong" value="strong">
           <span>Strong Password</span>
         </label>
         <label class="mode-tab">
@@ -132,6 +132,15 @@
           <label class="checkbox">
             <input type="checkbox" id="chk-prevent-repeated"> Prevent repeated characters
           </label>
+        </div>
+      </div>
+
+      <div id="panel-strong" class="options-panel hidden">
+        <h3 class="panel-title">Strong Password</h3>
+        <p class="hint">Uses uppercase and lowercase letters, numbers, and symbols with one of each required.</p>
+        <div class="form-row">
+          <label for="input-strong-length">Length</label>
+          <input type="number" id="input-strong-length" min="4" max="128" value="20" inputmode="numeric">
         </div>
       </div>
 
