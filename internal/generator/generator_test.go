@@ -144,6 +144,14 @@ func TestGeneratePassphrase(t *testing.T) {
 	}
 }
 
+func TestValidatePassphraseWordList(t *testing.T) {
+	opts := DefaultPassphraseOptions()
+	opts.WordList = "unknown"
+	if err := ValidatePassphraseOptions(opts); err != ErrInvalidWordList {
+		t.Fatalf("expected ErrInvalidWordList, got %v", err)
+	}
+}
+
 func TestGeneratePIN(t *testing.T) {
 	src := random.NewDeterministicSource(1, 2, 3, 4, 5, 6)
 	opts := DefaultPINOptions()

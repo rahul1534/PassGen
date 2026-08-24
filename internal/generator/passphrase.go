@@ -10,16 +10,20 @@ import (
 // PassphraseOptions configures passphrase generation.
 type PassphraseOptions struct {
 	Words      int
+	WordList   string
 	Separator  string
 	Capitalize bool
 	AddNumber  bool
 	AddSymbol  bool
 }
 
+const DefaultPassphraseWordList = "eff-large"
+
 // DefaultPassphraseOptions returns recommended passphrase defaults.
 func DefaultPassphraseOptions() PassphraseOptions {
 	return PassphraseOptions{
 		Words:      5,
+		WordList:   DefaultPassphraseWordList,
 		Separator:  "-",
 		Capitalize: false,
 		AddNumber:  true,
@@ -45,6 +49,14 @@ func LoadWordList() ([]string, error) {
 	return passphraseWords, nil
 }
 
+// LoadWordListByName loads a bundled word list by its stable identifier.
+func LoadWordListByName(name string) ([]string, error) {
+	if name != "" && name != DefaultPassphraseWordList {
+		return nil, ErrInvalidWordList
+	}
+	return LoadWordList()
+}
+
 // SetWordListForTests replaces the word list in tests.
 func SetWordListForTests(words []string) {
 	passphraseWords = words
@@ -60,7 +72,7 @@ func ValidatePassphraseOptions(opts PassphraseOptions) error {
 	if opts.Words < MinPassphraseWords || opts.Words > MaxPassphraseWords {
 		return ErrInvalidWordCount
 	}
-	if _, err := LoadWordList(); err != nil {
+	if _, err := LoadWordListByName(opts.WordList); err != nil {
 		return err
 	}
 	return nil
@@ -72,7 +84,7 @@ func GeneratePassphrase(src random.Source, opts PassphraseOptions) (string, erro
 		return "", err
 	}
 
-	words, err := LoadWordList()
+	words, err := LoadWordListByName(opts.WordList)
 	if err != nil {
 		return "", err
 	}

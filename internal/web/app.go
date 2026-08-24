@@ -90,6 +90,7 @@ func (a *App) bindEvents() {
 	a.onInput("input-excluded", a.readPasswordControls)
 	a.onInput("input-words", a.readPassphraseControls)
 	a.onInput("input-separator", a.readPassphraseControls)
+	a.onChange("select-wordlist", a.readPassphraseControls)
 	a.onInput("input-pin-length", a.readPINControls)
 
 	for _, id := range []string{
@@ -222,6 +223,10 @@ func (a *App) readStrongPasswordControls() {
 
 func (a *App) readPassphraseControls() {
 	a.passphrase.Words = a.intValue("input-words", a.passphrase.Words)
+	a.passphrase.WordList = a.stringValue("select-wordlist")
+	if a.passphrase.WordList == "" {
+		a.passphrase.WordList = generator.DefaultPassphraseWordList
+	}
 	a.passphrase.Separator = a.stringValue("input-separator")
 	if a.passphrase.Separator == "" {
 		a.passphrase.Separator = "-"
@@ -266,6 +271,7 @@ func (a *App) syncControlsFromState() {
 	a.setValue("input-excluded", a.password.ExcludedCharacters)
 
 	a.setIntValue("input-words", a.passphrase.Words)
+	a.setValue("select-wordlist", a.passphrase.WordList)
 	a.setValue("input-separator", a.passphrase.Separator)
 	a.setChecked("chk-capitalize", a.passphrase.Capitalize)
 	a.setChecked("chk-add-number", a.passphrase.AddNumber)

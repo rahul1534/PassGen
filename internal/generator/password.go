@@ -128,6 +128,8 @@ func UserMessage(err error) string {
 		return "PIN length must be between 4 and 32 digits."
 	case ErrInvalidWordCount:
 		return "Passphrase must contain between 3 and 20 words."
+	case ErrInvalidWordList:
+		return "Please select a supported passphrase word list."
 	case random.ErrRandomSourceFailure:
 		return "Secure random source unavailable. Cannot generate passwords safely."
 	default:
