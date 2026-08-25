@@ -359,7 +359,7 @@ func (a *App) render(strength generator.StrengthResult) {
 	strengthBar := a.doc.Call("getElementById", "strength-bar")
 	if !strengthBar.IsNull() {
 		strengthBar.Set("style", fmt.Sprintf("width: %d%%", strength.Level.BarWidth()))
-		strengthBar.Set("data-level", strength.Level.String())
+		strengthBar.Call("setAttribute", "data-level", strength.Level.String())
 	}
 
 	genBtn := a.doc.Call("getElementById", "btn-generate")
@@ -432,13 +432,13 @@ func (a *App) toggleAdvanced() {
 	if hidden {
 		el.Get("classList").Call("remove", "hidden")
 		if !btn.IsNull() {
-			btn.Set("aria-expanded", "true")
+			btn.Call("setAttribute", "aria-expanded", "true")
 			btn.Set("textContent", "Advanced Options ▲")
 		}
 	} else {
 		el.Get("classList").Call("add", "hidden")
 		if !btn.IsNull() {
-			btn.Set("aria-expanded", "false")
+			btn.Call("setAttribute", "aria-expanded", "false")
 			btn.Set("textContent", "Advanced Options ▼")
 		}
 	}
@@ -448,11 +448,11 @@ func (a *App) applyTheme() {
 	root := a.doc.Get("documentElement")
 	switch a.theme {
 	case themeLight:
-		root.Set("data-theme", "light")
+		root.Call("setAttribute", "data-theme", "light")
 	case themeDark:
-		root.Set("data-theme", "dark")
+		root.Call("setAttribute", "data-theme", "dark")
 	default:
-		root.Set("data-theme", "system")
+		root.Call("setAttribute", "data-theme", "system")
 	}
 }
 
