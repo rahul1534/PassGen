@@ -364,7 +364,7 @@ func (a *App) render(strength generator.StrengthResult) {
 
 	genBtn := a.doc.Call("getElementById", "btn-generate")
 	if !genBtn.IsNull() {
-		genBtn.Set("disabled", a.errorMsg != "" && a.output == "")
+		genBtn.Set("disabled", false)
 	}
 }
 

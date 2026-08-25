@@ -70,7 +70,15 @@ test.describe('PassForge generator', () => {
     await page.getByRole('button', { name: 'Generate' }).click();
     await expect(page.locator('#validation-error')).toBeVisible();
     await expect(page.locator('#validation-error')).toContainText('character type');
-    await expect(page.getByRole('button', { name: 'Generate' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Generate' })).toBeEnabled();
+
+    for (const id of ['chk-upper', 'chk-lower', 'chk-numbers', 'chk-symbols']) {
+      await page.locator(`#${id}`).check();
+    }
+    await page.locator('#input-length').fill('21');
+    await page.getByRole('button', { name: 'Generate' }).click();
+    await expect(page.locator('#validation-error')).toBeHidden();
+    await expect(page.locator('#password-output')).toHaveText(/^.{21}$/);
 
     await page.getByRole('button', { name: 'Reset to defaults' }).click();
     await expect(page.locator('#mode-random')).toBeChecked();
