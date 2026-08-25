@@ -16,8 +16,9 @@ test.describe('PassForge generator', () => {
     await expect(page.locator('#entropy-bits')).toContainText('bits estimated entropy');
     await expect(page.locator('#strength-bar')).toHaveAttribute('data-level', /.+/);
 
+    await page.locator('#input-length').fill('21');
     await page.getByRole('button', { name: 'Generate' }).click();
-    await expect(page.locator('#password-output')).not.toHaveText(initial);
+    await expect(page.locator('#password-output')).toHaveText(/^.{21}$/);
   });
 
   test('supports strong password, passphrase, and PIN modes', async ({ page }) => {
@@ -68,7 +69,7 @@ test.describe('PassForge generator', () => {
     }
     await page.getByRole('button', { name: 'Generate' }).click();
     await expect(page.locator('#validation-error')).toBeVisible();
-    await expect(page.locator('#validation-error')).toContainText('character set');
+    await expect(page.locator('#validation-error')).toContainText('character type');
     await expect(page.getByRole('button', { name: 'Generate' })).toBeDisabled();
 
     await page.getByRole('button', { name: 'Reset to defaults' }).click();
@@ -96,7 +97,8 @@ test.describe('PassForge generator', () => {
     await expect(page.getByRole('button', { name: 'Copied!' })).toBeVisible();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(password);
 
+    await page.locator('#input-length').fill('21');
     await page.locator('body').press('Control+Enter');
-    await expect(page.locator('#password-output')).not.toHaveText(password);
+    await expect(page.locator('#password-output')).toHaveText(/^.{21}$/);
   });
 });
