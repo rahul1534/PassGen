@@ -1,4 +1,4 @@
-.PHONY: build dev test format setup-hooks clean privacy
+.PHONY: build dev test test-ui production-check format setup-hooks clean privacy
 
 build:
 	@chmod +x scripts/build.sh
@@ -9,6 +9,12 @@ dev: build
 
 test:
 	@go test ./...
+
+test-ui:
+	@npx playwright test
+
+production-check:
+	@bash scripts/production-check.sh
 
 format:
 	@gofmt -w $$(git ls-files '*.go')

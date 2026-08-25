@@ -41,6 +41,20 @@ jobs:
       - name: Build WASM
         run: make build
 
+      - name: Production artifact boundary check
+        run: bash scripts/production-check.sh
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Install Playwright
+        run: npm install && npx playwright install --with-deps chromium
+
+      - name: UI tests
+        run: make test-ui
+
       - name: Install ripgrep
         run: sudo apt-get update && sudo apt-get install -y ripgrep
 
