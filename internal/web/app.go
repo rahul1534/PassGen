@@ -292,6 +292,7 @@ func (a *App) generate() {
 		result   string
 		err      error
 		strength generator.StrengthResult
+		modeName string
 	)
 
 	switch a.mode {
@@ -300,21 +301,25 @@ func (a *App) generate() {
 		if err == nil {
 			strength = generator.EstimatePasswordStrength(result, a.password)
 		}
+		modeName = "random"
 	case modeStrong:
 		result, err = generator.GeneratePassword(a.rng, a.strongPassword)
 		if err == nil {
 			strength = generator.EstimatePasswordStrength(result, a.strongPassword)
 		}
+		modeName = "strong"
 	case modePassphrase:
 		result, err = generator.GeneratePassphrase(a.rng, a.passphrase)
 		if err == nil {
 			strength = generator.EstimatePassphraseStrength(a.passphrase, generator.WordListSize())
 		}
+		modeName = "passphrase"
 	case modePIN:
 		result, err = generator.GeneratePIN(a.rng, a.pin)
 		if err == nil {
 			strength = generator.EstimatePINStrength(a.pin.Length, !a.pin.AllowRepeatedDigits)
 		}
+		modeName = "pin"
 	}
 
 	if err != nil {
@@ -322,6 +327,8 @@ func (a *App) generate() {
 		a.output = ""
 	} else {
 		a.output = result
+		// Track password generation via JavaScript
+		a.trackGeneration(modeName)
 	}
 	a.render(strength)
 }
@@ -406,6 +413,14 @@ func (a *App) setStatus(msg string) {
 	el := a.doc.Call("getElementById", "status-message")
 	if !el.IsNull() {
 		el.Set("textContent", msg)
+	}
+}
+
+func (a *App) trackGeneration(mode string) {
+	// Call JavaScript analytics tracking function
+	trackFn := js.Global().Get("trackPasswordGeneration")
+	if !trackFn.IsUndefined() && trackFn.Type() == js.TypeFunction {
+		trackFn.Invoke(mode)
 	}
 }
 

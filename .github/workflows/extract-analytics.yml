@@ -1,0 +1,94 @@
+name: Extract Analytics
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC (adjust as needed)
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  extract-analytics:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PassGen repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install playwright
+
+      - name: Extract analytics
+        run: |
+          node scripts/extract-analytics.mjs
+        env:
+          SITE_URL: 'https://rahul1534.github.io/PassGen/'
+          OUTPUT_DIR: './analytics-extracted'
+
+      - name: Prepare analytics data
+        run: |
+          # Create a timestamp for this run
+          TIMESTAMP=$(date -u '+%Y-%m-%d-%H-%M-%S')
+          mkdir -p "./analytics-extracted/history/${TIMESTAMP}"
+          cp ./analytics-extracted/*.json "./analytics-extracted/history/${TIMESTAMP}/" 2>/dev/null || true
+          
+          # Also keep a latest snapshot
+          mkdir -p "./analytics-extracted/latest"
+          cp ./analytics-extracted/analytics.json "./analytics-extracted/latest/" 2>/dev/null || true
+          cp ./analytics-extracted/summary.json "./analytics-extracted/latest/" 2>/dev/null || true
+
+      - name: Upload to analytics repo
+        env:
+          ANALYTICS_REPO_TOKEN: ${{ secrets.ANALYTICS_REPO_TOKEN }}
+          ANALYTICS_REPO: ${{ github.repository_owner }}/passgen-analytics
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          # Only push if we have data and a token
+          if [ -z "$ANALYTICS_REPO_TOKEN" ]; then
+            echo "⚠️  ANALYTICS_REPO_TOKEN not set. Skipping upload to private repo."
+            echo "To enable analytics storage:"
+            echo "1. Create a private repo: ${ANALYTICS_REPO}"
+            echo "2. Create a Personal Access Token with 'repo' scope"
+            echo "3. Add it as a secret: ANALYTICS_REPO_TOKEN"
+            exit 0
+          fi
+
+          # Clone the analytics repo
+          git clone "https://x-access-token:${ANALYTICS_REPO_TOKEN}@github.com/${ANALYTICS_REPO}.git" analytics-repo || {
+            echo "Creating new analytics repo..."
+            # If repo doesn't exist, we can't create it via script
+            # User must create it manually
+            exit 0
+          }
+
+          # Copy analytics data
+          cp -r ./analytics-extracted/* ./analytics-repo/
+          
+          # Commit and push
+          cd analytics-repo
+          git config user.name "PassGen Analytics Bot"
+          git config user.email "noreply@github.com"
+          
+          git add -A
+          if git diff --cached --quiet; then
+            echo "✓ No changes to commit"
+            exit 0
+          fi
+          
+          TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          git commit -m "Analytics update: ${TIMESTAMP}"
+          git push origin main 2>&1 | grep -v "x-access-token"
+
+      - name: Show summary
+        if: always()
+        run: |
+          echo "## Analytics Extraction Summary"
+          if [ -f "./analytics-extracted/summary.json" ]; then
+            echo ""
+            echo "Latest data:"
+            cat ./analytics-extracted/summary.json
+          fi
