@@ -16,7 +16,6 @@ PassForge is entirely client-side.
 - Passwords generated locally
 - Web Crypto API (`crypto.getRandomValues`)
 - No backend
-- No analytics
 - No accounts
 - No cookies for secrets
 - No password history
@@ -46,7 +45,7 @@ There is no password-generation server. You can also [run the application locall
 ## Why It's Secure
 
 - Passwords are generated in the browser using `crypto.getRandomValues()`
-- No analytics, no accounts, no database
+- No accounts, no database
 - Generated passwords are not stored in localStorage or sent over the network
 - Core generation logic is separated from UI and covered by unit + property tests
 - CI runs tests, `go vet`, privacy regression checks, and vulnerability scanning
