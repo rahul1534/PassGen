@@ -4,6 +4,16 @@ function showLoadError(message) {
   el.classList.remove('hidden');
 }
 
+// Analytics tracking function available to Go WASM
+function trackPasswordGeneration(mode) {
+  if (typeof PassForgeAnalytics !== 'undefined') {
+    PassForgeAnalytics.trackEvent('password_generated', {
+      mode: mode || 'unknown',
+      timestamp: new Date().toISOString()
+    });
+  }
+}
+
 async function loadApp() {
   if (!globalThis.crypto || !globalThis.crypto.getRandomValues) {
     showLoadError('Secure random source unavailable. Cannot generate passwords safely.');

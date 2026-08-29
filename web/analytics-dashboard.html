@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PassForge Analytics Data</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      margin-top: 0;
+      color: #333;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .stat-card {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 6px;
+      border-left: 4px solid #007bff;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #333;
+      margin-top: 5px;
+    }
+    .json-output {
+      background: #f4f4f4;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      margin-top: 20px;
+      max-height: 500px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .button-group {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button.danger {
+      background: #dc3545;
+    }
+    button.danger:hover {
+      background: #c82333;
+    }
+    .info-box {
+      background: #e7f3ff;
+      border-left: 4px solid #007bff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #333;
+    }
+    .info-box code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PassForge Analytics Dashboard</h1>
+    
+    <div class="info-box">
+      📊 All analytics data is stored <strong>locally in your browser</strong> (localStorage). No data is sent to external servers. This page displays and exports that data.
+    </div>
+
+    <div class="stats" id="stats-container">
+      <div class="stat-card">
+        <div class="stat-label">Total Events</div>
+        <div class="stat-value" id="stat-events">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Page Views</div>
+        <div class="stat-value" id="stat-views">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Passwords Generated</div>
+        <div class="stat-value" id="stat-generated">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Last Activity</div>
+        <div class="stat-value" id="stat-last" style="font-size: 14px;">—</div>
+      </div>
+    </div>
+
+    <div>
+      <h2>Generation Methods Breakdown</h2>
+      <div id="breakdown-container"></div>
+    </div>
+
+    <div>
+      <h2>Raw JSON Data</h2>
+      <div class="json-output" id="json-output">Loading...</div>
+    </div>
+
+    <div class="button-group">
+      <button onclick="downloadJSON()">⬇️ Download JSON</button>
+      <button onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+      <button class="danger" onclick="clearAnalytics()">🗑️ Clear All Data</button>
+    </div>
+  </div>
+
+  <script src="./analytics.js"></script>
+  <script>
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    }
+
+    function updateDashboard() {
+      const summary = PassForgeAnalytics.getSummary();
+      const data = PassForgeAnalytics.getData();
+
+      if (!summary || !data) {
+        document.getElementById('json-output').textContent = 'No analytics data found.';
+        return;
+      }
+
+      // Update stats
+      document.getElementById('stat-events').textContent = summary.total_events;
+      document.getElementById('stat-views').textContent = summary.page_views;
+      document.getElementById('stat-generated').textContent = summary.password_generations;
+      document.getElementById('stat-last').textContent = summary.last_activity 
+        ? formatDate(summary.last_activity)
+        : '—';
+
+      // Update breakdown
+      const breakdown = document.getElementById('breakdown-container');
+      if (Object.keys(summary.generations_by_mode).length > 0) {
+        breakdown.innerHTML = Object.entries(summary.generations_by_mode)
+          .map(([mode, count]) => `
+            <div class="stat-card">
+              <div class="stat-label">${mode.replace('_', ' ')}</div>
+              <div class="stat-value">${count}</div>
+            </div>
+          `)
+          .join('');
+      } else {
+        breakdown.innerHTML = '<p>No password generations yet.</p>';
+      }
+
+      // Update JSON
+      document.getElementById('json-output').textContent = PassForgeAnalytics.exportData();
+    }
+
+    function downloadJSON() {
+      const data = PassForgeAnalytics.exportData();
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `passforge-analytics-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function copyToClipboard() {
+      const data = PassForgeAnalytics.exportData();
+      navigator.clipboard.writeText(data).then(() => {
+        alert('Analytics data copied to clipboard!');
+      }).catch(() => {
+        alert('Failed to copy to clipboard');
+      });
+    }
+
+    function clearAnalytics() {
+      if (confirm('Are you sure you want to delete all analytics data? This cannot be undone.')) {
+        PassForgeAnalytics.clearData();
+        updateDashboard();
+        alert('Analytics data cleared!');
+      }
+    }
+
+    // Initial load
+    updateDashboard();
+
+    // Refresh dashboard every 2 seconds to show live updates
+    setInterval(updateDashboard, 2000);
+  </script>
+</body>
+</html>

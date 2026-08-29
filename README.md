@@ -11,12 +11,12 @@ PassForge is a privacy-first, open-source password generator that runs entirely 
 
 ## Privacy
 
-PassForge is entirely client-side.
+PassForge is entirely client-side with privacy-first analytics.
 
 - Passwords generated locally
 - Web Crypto API (`crypto.getRandomValues`)
 - No backend
-- No analytics
+- **Optional local analytics** (stored in your browser, never sent to third parties)
 - No accounts
 - No cookies for secrets
 - No password history
@@ -25,6 +25,16 @@ PassForge is entirely client-side.
 - Works offline after assets are loaded
 
 See [SECURITY.md](SECURITY.md) and [docs/security.md](docs/security.md).
+
+### Analytics (Optional)
+
+PassForge includes optional, privacy-first usage analytics:
+- 📊 Tracks page views and password generation methods locally in your browser
+- 🔒 All data stored in browser localStorage — never sent to external services
+- 📁 Automatically exported to your private GitHub repository daily
+- ✅ Completely transparent and GDPR/CCPA compliant
+
+See [docs/analytics-setup.md](docs/analytics-setup.md) for setup instructions.
 
 ## Can I trust PassForge?
 
@@ -41,12 +51,13 @@ There is no password-generation server. You can also [run the application locall
 - **Copy to clipboard** with accessible feedback
 - **Light, dark, and system themes**
 - **Responsive, keyboard-accessible UI**
+- **Privacy-first analytics** — track usage locally, export to your private GitHub repo
 - **No backend** — static HTML, CSS, and Go WebAssembly only
 
 ## Why It's Secure
 
 - Passwords are generated in the browser using `crypto.getRandomValues()`
-- No analytics, no accounts, no database
+- Optional local analytics that respects privacy (no third-party services)
 - Generated passwords are not stored in localStorage or sent over the network
 - Core generation logic is separated from UI and covered by unit + property tests
 - CI runs tests, `go vet`, privacy regression checks, and vulnerability scanning
