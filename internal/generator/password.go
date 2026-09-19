@@ -106,6 +106,12 @@ func GeneratePassword(src random.Source, opts PasswordOptions) (string, error) {
 		used[r] = true
 	}
 
+	// Invariant guard: validation should make this unreachable, but never
+	// hand back a password whose length differs from what was requested.
+	if len(password) != opts.Length {
+		return "", ErrImpossibleMinimums
+	}
+
 	if err := random.Shuffle(src, password); err != nil {
 		return "", err
 	}
@@ -122,6 +128,8 @@ func UserMessage(err error) string {
 		return "Please select at least one character type."
 	case ErrImpossibleMinimums:
 		return "Minimum character requirements exceed password length."
+	case ErrInvalidMinimum:
+		return "Minimum character counts cannot be negative."
 	case ErrNoAvailableChars:
 		return "Your excluded characters remove all available characters from a selected group."
 	case ErrInvalidPINLength:

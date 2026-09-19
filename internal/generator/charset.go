@@ -92,6 +92,22 @@ func ValidatePasswordOptions(opts PasswordOptions) error {
 		return ErrNoAvailableChars
 	}
 
+	// Negative minimums must be rejected outright: they would otherwise offset
+	// oversized minimums in the sum below and let the output exceed Length.
+	for _, m := range []struct {
+		enabled bool
+		min     int
+	}{
+		{opts.Lowercase, opts.MinLowercase},
+		{opts.Uppercase, opts.MinUppercase},
+		{opts.Numbers, opts.MinNumbers},
+		{opts.Symbols, opts.MinSymbols},
+	} {
+		if m.enabled && m.min < 0 {
+			return ErrInvalidMinimum
+		}
+	}
+
 	minTotal := 0
 	if opts.Lowercase {
 		minTotal += opts.MinLowercase
