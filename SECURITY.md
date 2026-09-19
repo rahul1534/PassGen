@@ -17,7 +17,7 @@ Production password generation uses the browser Web Crypto API (`crypto.getRando
 
 ## Content Security Policy
 
-The app ships a strict CSP. Go’s WebAssembly runtime requires `'unsafe-eval'` / `'wasm-unsafe-eval'`. `connect-src 'self'` allows loading local `app.wasm` and blocks third-party network requests. See comments in `web/index.html` and [docs/architecture.md](docs/architecture.md).
+The app ships a strict CSP. WebAssembly compilation requires `'wasm-unsafe-eval'`; `'unsafe-eval'` is intentionally not allowed because neither Go’s `wasm_exec.js` nor the app uses `eval()` / `new Function()`. `connect-src 'self'` allows loading local `app.wasm` and blocks third-party network requests. See comments in `web/index.html` and [docs/architecture.md](docs/architecture.md).
 
 ## Automated checks
 

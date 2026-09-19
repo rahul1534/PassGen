@@ -110,3 +110,62 @@ test.describe('PassForge generator', () => {
     await expect(page.locator('#password-output')).toHaveText(/^.{21}$/);
   });
 });
+
+test.describe('PassForge privacy guarantees (runtime)', () => {
+  test('makes no cross-origin requests and raises no CSP violations', async ({ page, baseURL }) => {
+    const origin = new URL(baseURL).origin;
+    const crossOrigin = [];
+    const problems = [];
+
+    page.on('request', (request) => {
+      const url = request.url();
+      if (!url.startsWith(origin) && !url.startsWith('data:') && !url.startsWith('blob:')) {
+        crossOrigin.push(url);
+      }
+    });
+    // Chromium reports CSP violations (e.g. eval blocked because 'unsafe-eval' is
+    // absent) as console errors; uncaught exceptions surface via pageerror.
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') problems.push(`console: ${msg.text()}`);
+    });
+    page.on('pageerror', (err) => problems.push(`pageerror: ${err.message}`));
+
+    await waitForApplication(page);
+    for (const mode of ['#mode-strong', '#mode-passphrase', '#mode-pin', '#mode-random']) {
+      await page.locator(mode).check();
+      await page.getByRole('button', { name: 'Generate' }).click();
+      await expect(page.locator('#password-output')).not.toHaveText('');
+    }
+    await page.waitForLoadState('networkidle');
+
+    expect(crossOrigin, 'no request may leave the origin').toEqual([]);
+    expect(problems, 'no CSP violations or script errors').toEqual([]);
+  });
+
+  test('ships the approved strict CSP', async ({ page }) => {
+    await page.goto('/');
+    const csp = await page
+      .locator('meta[http-equiv="Content-Security-Policy"]')
+      .getAttribute('content');
+
+    expect(csp).toContain("connect-src 'self';");
+    expect(csp).toContain("script-src 'self' 'wasm-unsafe-eval';");
+    // Plain 'unsafe-eval' must be absent ('wasm-unsafe-eval' is fine and required).
+    expect(csp).not.toMatch(/(^|\s)'unsafe-eval'/);
+    expect(csp).not.toMatch(/https?:/);
+  });
+
+  test('rejects negative minimum counts instead of over-long output', async ({ page }) => {
+    await waitForApplication(page);
+    await page.getByRole('button', { name: /Advanced Options/ }).click();
+
+    await page.locator('#input-length').fill('10');
+    await page.locator('#input-min-upper').fill('30');
+    await page.locator('#input-min-lower').fill('-20');
+    await page.getByRole('button', { name: 'Generate' }).click();
+
+    await expect(page.locator('#validation-error')).toBeVisible();
+    await expect(page.locator('#validation-error')).toContainText('cannot be negative');
+    await expect(page.locator('#password-output')).toHaveText('');
+  });
+});

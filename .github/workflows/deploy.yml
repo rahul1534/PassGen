@@ -5,10 +5,9 @@ on:
     branches:
       - main
 
+# Least privilege by default; only the deploy job gets Pages/OIDC access.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -21,10 +20,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # Deploys must never ship code that fails the project's own checks
+      # (this workflow runs on push independently of ci.yml).
+      - name: Privacy regression checks (privacy + CSP policy)
+        run: bash scripts/privacy-check.sh
+
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.25'
+          go-version: '1.26'
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./... -count=1
 
       - name: Build
         run: make build
@@ -37,6 +47,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

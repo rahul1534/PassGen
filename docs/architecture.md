@@ -35,4 +35,4 @@ Browser
 
 ## Content Security Policy
 
-See comments in `web/index.html`. The Go WASM runtime requires `'unsafe-eval'` / `'wasm-unsafe-eval'`. `connect-src 'self'` allows loading `app.wasm` and blocks third-party network calls.
+See comments in `web/index.html`. WebAssembly compilation requires `'wasm-unsafe-eval'`; `'unsafe-eval'` is intentionally not allowed (neither `wasm_exec.js` nor the app uses `eval()` / `new Function()`). `connect-src 'self'` allows loading `app.wasm` and blocks third-party network calls.

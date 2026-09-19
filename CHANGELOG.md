@@ -4,6 +4,15 @@ All notable changes to PassForge are documented in this file.
 
 ## Unreleased
 
+### Security
+- Removed the Cloudflare Web Analytics beacon and the CSP allowances added for it; `script-src` and `connect-src` are same-origin again, matching the "no analytics / nothing sent to a server" guarantees
+- Dropped `'unsafe-eval'` from the CSP (only `'wasm-unsafe-eval'` is required)
+- Password options: negative minimum counts are now rejected (they could offset oversized minimums and produce output longer than requested)
+- `scripts/privacy-check.sh` is now case-insensitive, fails closed on errors, bans external resources and analytics vendors, and asserts the CSP matches the approved policy exactly
+- Browser tests assert no cross-origin requests and no CSP violations at runtime
+- Deploy workflow now runs the privacy check, `go vet` and tests before publishing, and only the deploy job has Pages/OIDC permissions
+- Security workflow: `govulncheck` is blocking, `gosec`/`staticcheck` are explicit advisory steps, least-privilege token permissions; removed the never-run gitleaks placeholder
+
 ### Added
 - Separate CI workflow (format, vet, tests, race, WASM build, privacy checks, govulncheck)
 - Dependabot updates for GitHub Actions

@@ -10,6 +10,7 @@ var (
 	ErrInvalidPINLength              = errors.New("invalid PIN length")
 	ErrInvalidWordCount              = errors.New("invalid word count")
 	ErrInvalidWordList               = errors.New("invalid word list")
+	ErrInvalidMinimum                = errors.New("minimum character count must not be negative")
 	ErrUnableToSatisfyPINConstraints = errors.New("unable to satisfy PIN constraints")
 )
 
