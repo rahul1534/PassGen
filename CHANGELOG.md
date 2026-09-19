@@ -14,7 +14,7 @@ All notable changes to PassForge are documented in this file.
 ### Accessibility
 - Mode tabs and character chips now show a visible keyboard focus ring (previously the visually hidden radio inputs swallowed it)
 - The strength meter exposes `aria-valuenow`/`aria-valuetext`; the readout has an accessible name; copying is announced to screen readers
-- Fixed low contrast on the copied-state and hover styles (hover no longer fades the label with opacity)
+- Fixed low contrast on the copied-state and hover styles; the Playwright suite now runs axe-core (WCAG 2.x A/AA and best practices) in light and dark themes, every mode, and the copied and error states
 
 ### Security
 - Removed the Cloudflare Web Analytics beacon and the CSP allowances added for it; `script-src` and `connect-src` are same-origin again, matching the "no analytics / nothing sent to a server" guarantees

@@ -41,7 +41,7 @@ There is no password-generation server. You can also [run the application locall
 - **Colour-coded characters**: digits are blue and symbols are orange, which makes passwords easier to read and transcribe
 - **Copy to clipboard** with accessible feedback
 - **Light, dark, and system themes**
-- **Responsive, keyboard-accessible UI**
+- **Responsive, keyboard-accessible UI**, checked automatically for WCAG 2.x AA issues (contrast, names, roles) in both themes
 - **No backend** — static HTML, CSS, and Go WebAssembly only
 
 ## Why It's Secure

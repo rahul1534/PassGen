@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 async function waitForApplication(page) {
   await page.goto('/');
@@ -271,3 +272,43 @@ test.describe('PassForge interface', () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 });
+
+
+// Automated WCAG 2.x A/AA checks (contrast, names, roles, landmarks) in both
+// colour schemes and every mode, plus the transient copied and error states.
+for (const scheme of ['light', 'dark']) {
+  test.describe(`PassForge accessibility (${scheme})`, () => {
+    test.use({ colorScheme: scheme, reducedMotion: 'reduce' });
+
+    const audit = async (page) => {
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'])
+        .analyze();
+      const summary = results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+      expect(summary, 'accessibility violations').toEqual([]);
+    };
+
+    for (const mode of ['random', 'strong', 'passphrase', 'pin']) {
+      test(`${mode} mode has no violations`, async ({ page }) => {
+        await waitForApplication(page);
+        await page.locator(`#mode-${mode}`).check();
+        if (mode === 'random') await page.getByRole('button', { name: /Advanced options/ }).click();
+        await audit(page);
+      });
+    }
+
+    test('copied and error states have no violations', async ({ page, context }) => {
+      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+      await waitForApplication(page);
+      await page.getByRole('button', { name: 'Copy' }).click();
+      await expect(page.locator('#btn-copy')).toHaveAttribute('data-state', 'copied');
+      await audit(page);
+
+      for (const id of ['chk-upper', 'chk-lower', 'chk-numbers', 'chk-symbols']) {
+        await page.locator(`#${id}`).uncheck();
+      }
+      await expect(page.locator('#validation-error')).toBeVisible();
+      await audit(page);
+    });
+  });
+}
