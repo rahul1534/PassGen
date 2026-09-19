@@ -18,7 +18,9 @@ GitHub Pages only serves static files (HTML, CSS, JS, WASM). It does not generat
 
 - Unit and property tests in `internal/generator`
 - CI: `go test`, `go vet`, race tests, WASM build
-- Privacy regression script: `scripts/privacy-check.sh`
+- Privacy regression script: `scripts/privacy-check.sh` (case-insensitive keyword/API bans, no external
+  resources, fails closed on errors, and asserts the CSP in `web/index.html` matches the approved policy exactly)
+- Browser tests assert no cross-origin requests and no CSP violations at runtime (`tests/ui/app.spec.mjs`)
 - Vulnerability scanning via `govulncheck` in CI
 
 ## Reporting
