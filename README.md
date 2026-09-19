@@ -37,6 +37,8 @@ There is no password-generation server. You can also [run the application locall
 - **Passphrases** from a bundled word list (EFF Large Wordlist, 7,776 words)
 - **PIN / numeric codes** with optional pattern avoidance (and a clear low-entropy warning)
 - **Estimated strength** based on theoretical entropy (honestly labeled)
+- **Live results**: options and length sliders regenerate immediately, so the readout always matches the settings on screen
+- **Colour-coded characters**: digits are blue and symbols are orange, which makes passwords easier to read and transcribe
 - **Copy to clipboard** with accessible feedback
 - **Light, dark, and system themes**
 - **Responsive, keyboard-accessible UI**

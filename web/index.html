@@ -11,6 +11,8 @@
     - No CDN scripts/fonts; all assets are same-origin.
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
+  <meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a0d13" media="(prefers-color-scheme: dark)">
   <title>PassForge — Secure Password Generator</title>
   <meta name="description" content="Generate secure passwords and passphrases locally in your browser.">
   <meta property="og:title" content="PassForge — Secure Password Generator">
@@ -20,183 +22,174 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main">Skip to the generator</a>
 
   <header class="site-header">
-    <div class="container header-inner">
-      <h1 id="app-title" class="logo">PassForge</h1>
-      <nav aria-label="Site">
-        <a id="github-link" href="#" rel="noopener noreferrer" target="_blank">GitHub</a>
+    <div class="wrap header-inner">
+      <a id="app-title" class="brand" href="./">PassForge</a>
+      <nav class="header-nav" aria-label="Site">
+        <label class="theme-picker">
+          <span class="visually-hidden">Color theme</span>
+          <select id="theme-select" class="select" aria-label="Color theme">
+            <option value="system" selected>System theme</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+        <a id="github-link" class="nav-link" href="#" rel="noopener noreferrer" target="_blank">GitHub</a>
       </nav>
     </div>
   </header>
 
-  <main id="main" class="container">
-    <section class="hero" aria-labelledby="hero-title">
-      <h2 id="hero-title">Password Generator</h2>
-      <p class="subtitle">Strong passwords generated locally in your browser. Nothing is sent to a server.</p>
-    </section>
+  <main id="main" class="wrap">
+    <div class="intro">
+      <h1 id="hero-title">Password generator</h1>
+      <p class="lede">Create strong passwords, passphrases and PINs. Everything is generated in your browser, and nothing is sent to a server.</p>
+    </div>
 
-    <section class="card" aria-label="Password generator">
-      <fieldset class="mode-tabs">
-        <legend class="visually-hidden">Generation mode</legend>
-        <label class="mode-tab">
-          <input type="radio" name="mode" id="mode-random" value="random" checked>
-          <span>Random Password</span>
-        </label>
-        <label class="mode-tab">
-          <input type="radio" name="mode" id="mode-strong" value="strong">
-          <span>Strong Password</span>
-        </label>
-        <label class="mode-tab">
-          <input type="radio" name="mode" id="mode-passphrase" value="passphrase">
-          <span>Passphrase</span>
-        </label>
-        <label class="mode-tab">
-          <input type="radio" name="mode" id="mode-pin" value="pin">
-          <span>PIN</span>
-        </label>
-      </fieldset>
-
-      <div class="output-section">
-        <label for="password-output" class="output-label">Generated Password</label>
-        <div id="password-output" class="password-output" aria-live="polite" aria-atomic="true" tabindex="0"></div>
-        <p id="validation-error" class="validation-error hidden" role="alert"></p>
-        <p id="status-message" class="status-message" aria-live="polite"></p>
+    <section class="tool" aria-label="Password generator">
+      <div class="pane pane-modes">
+        <fieldset class="modes">
+          <legend class="visually-hidden">Generation mode</legend>
+          <label class="mode"><input type="radio" name="mode" id="mode-random" value="random" checked><span>Random</span></label>
+          <label class="mode"><input type="radio" name="mode" id="mode-strong" value="strong"><span>Strong</span></label>
+          <label class="mode"><input type="radio" name="mode" id="mode-passphrase" value="passphrase"><span>Passphrase</span></label>
+          <label class="mode"><input type="radio" name="mode" id="mode-pin" value="pin"><span>PIN</span></label>
+        </fieldset>
       </div>
 
-      <div class="action-row">
-        <button type="button" id="btn-copy" class="btn btn-secondary">Copy</button>
-        <button type="button" id="btn-generate" class="btn btn-primary">Generate</button>
-      </div>
+      <div class="pane pane-result">
+        <div class="well">
+          <span id="output-label" class="visually-hidden">Generated password</span>
+          <div id="password-output" class="readout" role="textbox" aria-readonly="true" aria-multiline="true" aria-labelledby="output-label" aria-live="polite" aria-atomic="true" tabindex="0"></div>
+          <p id="validation-error" class="notice notice-error hidden" role="alert"></p>
+          <p id="status-message" class="notice" aria-live="polite"></p>
+          <noscript><p class="notice notice-error">PassForge needs JavaScript and WebAssembly to generate passwords locally in your browser.</p></noscript>
 
-      <div class="strength-section" aria-label="Estimated password strength">
-        <div class="strength-header">
-          <span>Estimated strength</span>
-          <span id="strength-label" class="strength-label">—</span>
-        </div>
-        <div class="strength-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-labelledby="strength-label">
-          <div id="strength-bar" class="strength-bar" data-level=""></div>
-        </div>
-        <p id="entropy-bits" class="hint"></p>
-        <p class="hint" title="This estimate assumes the password was generated randomly from the selected character set. It does not account for site-specific password policies, breached-password lists, or human choices.">
-          Estimate assumes uniform random generation from the selected pool. It is not a guarantee for every website.
-        </p>
-      </div>
-
-      <hr class="divider">
-
-      <div id="panel-random" class="options-panel">
-        <h3 class="panel-title">Password Requirements</h3>
-
-        <div class="form-row">
-          <label for="input-length">Length</label>
-          <input type="number" id="input-length" min="4" max="128" value="20" inputmode="numeric">
-        </div>
-
-        <div class="checkbox-grid">
-          <label class="checkbox"><input type="checkbox" id="chk-upper" checked> Uppercase letters</label>
-          <label class="checkbox"><input type="checkbox" id="chk-lower" checked> Lowercase letters</label>
-          <label class="checkbox"><input type="checkbox" id="chk-numbers" checked> Numbers</label>
-          <label class="checkbox"><input type="checkbox" id="chk-symbols" checked> Symbols</label>
-        </div>
-
-        <button type="button" id="btn-advanced-toggle" class="link-btn" aria-expanded="false" aria-controls="advanced-panel">
-          Advanced Options ▼
-        </button>
-
-        <div id="advanced-panel" class="advanced-panel hidden">
-          <div class="form-row">
-            <label for="input-min-upper">Minimum uppercase</label>
-            <input type="number" id="input-min-upper" min="0" max="128" value="1" inputmode="numeric">
+          <div class="strength" aria-label="Estimated password strength">
+            <div id="strength-track" class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="strength-title strength-label">
+              <div id="strength-bar" class="meter-fill" data-level=""></div>
+            </div>
+            <div class="strength-meta">
+              <span><span id="strength-title" class="strength-title">Estimated strength</span> <span id="strength-label" class="strength-label">—</span></span>
+              <span id="entropy-bits" class="entropy"></span>
+            </div>
           </div>
-          <div class="form-row">
-            <label for="input-min-lower">Minimum lowercase</label>
-            <input type="number" id="input-min-lower" min="0" max="128" value="1" inputmode="numeric">
+        </div>
+
+        <div class="actions">
+          <button type="button" id="btn-copy" class="btn btn-primary">Copy</button>
+          <button type="button" id="btn-generate" class="btn btn-secondary">Generate</button>
+        </div>
+        <p id="copy-announcer" class="visually-hidden" aria-live="polite"></p>
+
+        <details class="explain">
+          <summary>How is strength estimated?</summary>
+          <p>The estimate assumes the secret was generated randomly from the selected character set or word list. It does not account for site-specific password policies, breached-password lists, or passwords chosen by people.</p>
+        </details>
+      </div>
+
+      <div class="pane pane-options">
+        <div id="panel-random" class="options">
+          <h2 class="options-title">Random password</h2>
+          <div class="length">
+            <label for="input-length">Length</label>
+            <input type="number" id="input-length" class="num" min="4" max="128" value="20" inputmode="numeric">
+            <input type="range" id="input-length-range" class="slider" min="4" max="128" value="20" aria-label="Length slider">
           </div>
-          <div class="form-row">
-            <label for="input-min-numbers">Minimum numbers</label>
-            <input type="number" id="input-min-numbers" min="0" max="128" value="1" inputmode="numeric">
+
+          <div class="chips" role="group" aria-label="Character types">
+            <label class="chip" data-kind="letter"><input type="checkbox" id="chk-upper" checked><span class="chip-sample" aria-hidden="true">A–Z</span><span class="chip-name">Uppercase</span></label>
+            <label class="chip" data-kind="letter"><input type="checkbox" id="chk-lower" checked><span class="chip-sample" aria-hidden="true">a–z</span><span class="chip-name">Lowercase</span></label>
+            <label class="chip" data-kind="digit"><input type="checkbox" id="chk-numbers" checked><span class="chip-sample" aria-hidden="true">0–9</span><span class="chip-name">Numbers</span></label>
+            <label class="chip" data-kind="symbol"><input type="checkbox" id="chk-symbols" checked><span class="chip-sample" aria-hidden="true">!@#</span><span class="chip-name">Symbols</span></label>
           </div>
-          <div class="form-row">
-            <label for="input-min-symbols">Minimum symbols</label>
-            <input type="number" id="input-min-symbols" min="0" max="128" value="1" inputmode="numeric">
+
+          <button type="button" id="btn-advanced-toggle" class="disclosure" aria-expanded="false" aria-controls="advanced-panel">Advanced options</button>
+
+          <div id="advanced-panel" class="advanced hidden">
+            <div class="min-grid">
+              <div class="field-inline"><label for="input-min-upper">Minimum uppercase</label><input type="number" id="input-min-upper" class="num num-sm" min="0" max="128" value="1" inputmode="numeric"></div>
+              <div class="field-inline"><label for="input-min-lower">Minimum lowercase</label><input type="number" id="input-min-lower" class="num num-sm" min="0" max="128" value="1" inputmode="numeric"></div>
+              <div class="field-inline"><label for="input-min-numbers">Minimum numbers</label><input type="number" id="input-min-numbers" class="num num-sm" min="0" max="128" value="1" inputmode="numeric"></div>
+              <div class="field-inline"><label for="input-min-symbols">Minimum symbols</label><input type="number" id="input-min-symbols" class="num num-sm" min="0" max="128" value="1" inputmode="numeric"></div>
+            </div>
+            <label class="check">
+              <input type="checkbox" id="chk-exclude-ambiguous">
+              <span><span class="check-title">Exclude ambiguous characters</span><span class="check-hint">Skips 0, O, o, 1, I and l. Useful when a password has to be read or typed by hand; it shrinks the character pool slightly.</span></span>
+            </label>
+            <label class="check">
+              <input type="checkbox" id="chk-prevent-repeated">
+              <span><span class="check-title">Prevent repeated characters</span><span class="check-hint">Every character appears at most once.</span></span>
+            </label>
+            <div class="field">
+              <label for="input-excluded">Characters to exclude</label>
+              <input type="text" id="input-excluded" class="text" autocomplete="off" spellcheck="false" placeholder="For example: {}[]">
+            </div>
           </div>
-          <label class="checkbox" title="Useful when passwords need to be read or typed manually. Reduces the character pool (and entropy) slightly.">
-            <input type="checkbox" id="chk-exclude-ambiguous"> Exclude ambiguous characters
-          </label>
-          <p class="hint">Useful when passwords need to be read or typed manually.</p>
-          <div class="form-row">
-            <label for="input-excluded">Characters to exclude</label>
-            <input type="text" id="input-excluded" autocomplete="off" spellcheck="false" placeholder="">
+        </div>
+
+        <div id="panel-strong" class="options hidden">
+          <h2 class="options-title">Strong password</h2>
+          <p class="options-note">Uppercase and lowercase letters, numbers and symbols, with at least one of each.</p>
+          <div class="length">
+            <label for="input-strong-length">Length</label>
+            <input type="number" id="input-strong-length" class="num" min="4" max="128" value="20" inputmode="numeric">
+            <input type="range" id="input-strong-length-range" class="slider" min="4" max="128" value="20" aria-label="Length slider">
           </div>
-          <label class="checkbox">
-            <input type="checkbox" id="chk-prevent-repeated"> Prevent repeated characters
-          </label>
+        </div>
+
+        <div id="panel-passphrase" class="options hidden">
+          <h2 class="options-title">Passphrase</h2>
+          <p class="options-note">Security comes from the number of randomly chosen words, not from added symbols.</p>
+          <div class="length">
+            <label for="input-words">Number of words</label>
+            <input type="number" id="input-words" class="num" min="3" max="20" value="5" inputmode="numeric">
+            <input type="range" id="input-words-range" class="slider" min="3" max="20" value="5" aria-label="Number of words slider">
+          </div>
+          <div class="field-pair">
+            <div class="field">
+              <label for="select-wordlist">Word list</label>
+              <select id="select-wordlist" class="select">
+                <option value="eff-large" selected>EFF Large Wordlist</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="input-separator">Separator</label>
+              <input type="text" id="input-separator" class="text" value="-" maxlength="3" autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" id="chk-capitalize"><span><span class="check-title">Capitalize each word</span></span></label>
+          <label class="check"><input type="checkbox" id="chk-add-number" checked><span><span class="check-title">Add a number</span></span></label>
+          <label class="check"><input type="checkbox" id="chk-add-symbol"><span><span class="check-title">Add a symbol</span></span></label>
+        </div>
+
+        <div id="panel-pin" class="options hidden">
+          <h2 class="options-title">PIN</h2>
+          <p class="callout warning" role="note">
+            PINs provide much less entropy than passwords. Use them only where the system requires a numeric code.
+            A 6-digit PIN has about 1,000,000 possible values.
+          </p>
+          <div class="length">
+            <label for="input-pin-length">Length</label>
+            <input type="number" id="input-pin-length" class="num" min="4" max="32" value="6" inputmode="numeric">
+            <input type="range" id="input-pin-length-range" class="slider" min="4" max="32" value="6" aria-label="PIN length slider">
+          </div>
+          <label class="check"><input type="checkbox" id="chk-pin-repeated" checked><span><span class="check-title">Allow repeated digits</span></span></label>
+          <label class="check"><input type="checkbox" id="chk-pin-avoid-patterns"><span><span class="check-title">Avoid simple patterns</span><span class="check-hint">Rejects PINs that are fully sequential or all the same digit.</span></span></label>
         </div>
       </div>
 
-      <div id="panel-strong" class="options-panel hidden">
-        <h3 class="panel-title">Strong Password</h3>
-        <p class="hint">Uses uppercase and lowercase letters, numbers, and symbols with one of each required.</p>
-        <div class="form-row">
-          <label for="input-strong-length">Length</label>
-          <input type="number" id="input-strong-length" min="4" max="128" value="20" inputmode="numeric">
-        </div>
-      </div>
-
-      <div id="panel-passphrase" class="options-panel hidden">
-        <h3 class="panel-title">Passphrase Options</h3>
-        <div class="form-row">
-          <label for="input-words">Number of words</label>
-          <input type="number" id="input-words" min="3" max="20" value="5" inputmode="numeric">
-        </div>
-        <div class="form-row">
-          <label for="select-wordlist">Word list</label>
-          <select id="select-wordlist">
-            <option value="eff-large" selected>EFF Large Wordlist</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label for="input-separator">Separator</label>
-          <input type="text" id="input-separator" value="-" maxlength="3" autocomplete="off" spellcheck="false">
-        </div>
-        <label class="checkbox"><input type="checkbox" id="chk-capitalize"> Capitalize first letter of each word</label>
-        <label class="checkbox"><input type="checkbox" id="chk-add-number" checked> Add number</label>
-        <label class="checkbox"><input type="checkbox" id="chk-add-symbol"> Add symbol</label>
-        <p class="hint">Security depends primarily on the number of randomly selected words, not on adding arbitrary symbols.</p>
-      </div>
-
-      <div id="panel-pin" class="options-panel hidden">
-        <h3 class="panel-title">PIN Options</h3>
-        <p class="warning" role="note">
-          PINs provide much less entropy than passwords. Use them only where the system requires a numeric code.
-          A 6-digit PIN has about 1,000,000 possible values.
-        </p>
-        <div class="form-row">
-          <label for="input-pin-length">Length</label>
-          <input type="number" id="input-pin-length" min="4" max="32" value="6" inputmode="numeric">
-        </div>
-        <label class="checkbox"><input type="checkbox" id="chk-pin-repeated" checked> Allow repeated digits</label>
-        <label class="checkbox"><input type="checkbox" id="chk-pin-avoid-patterns"> Avoid simple patterns (sequential or all same)</label>
-      </div>
-
-      <div class="utility-row">
-        <label for="theme-select">Theme</label>
-        <select id="theme-select" aria-label="Color theme">
-          <option value="system" selected>System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
-        <button type="button" id="btn-reset" class="btn btn-ghost">Reset to defaults</button>
+      <div class="pane pane-foot">
+        <p class="shortcut">Press <kbd>Ctrl</kbd> or <kbd>⌘</kbd> + <kbd>Enter</kbd> to generate a new one.</p>
+        <button type="button" id="btn-reset" class="btn btn-quiet">Reset to defaults</button>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="container">
-      <p><strong>PassForge</strong> is open source.</p>
-      <p>Your passwords are generated locally in your browser and are never sent to a server.</p>
+    <div class="wrap footer-inner">
+      <p><strong>PassForge</strong> is open source. Your passwords are generated locally in your browser and are never sent to a server.</p>
       <p><a id="footer-github-link" href="#">View source</a></p>
     </div>
   </footer>

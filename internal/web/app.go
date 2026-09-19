@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"syscall/js"
+	"unicode/utf8"
 
 	"github.com/rahul1534/PassGen/internal/config"
 	"github.com/rahul1534/PassGen/internal/generator"
@@ -81,17 +82,23 @@ func (a *App) bindEvents() {
 	a.onChange("mode-passphrase", func() { a.setMode(modePassphrase) })
 	a.onChange("mode-pin", func() { a.setMode(modePIN) })
 
-	a.onInput("input-length", a.readPasswordControls)
-	a.onInput("input-strong-length", a.readStrongPasswordControls)
-	a.onInput("input-min-upper", a.readPasswordControls)
-	a.onInput("input-min-lower", a.readPasswordControls)
-	a.onInput("input-min-numbers", a.readPasswordControls)
-	a.onInput("input-min-symbols", a.readPasswordControls)
-	a.onInput("input-excluded", a.readPasswordControls)
-	a.onInput("input-words", a.readPassphraseControls)
-	a.onInput("input-separator", a.readPassphraseControls)
-	a.onChange("select-wordlist", a.readPassphraseControls)
-	a.onInput("input-pin-length", a.readPINControls)
+	// Options regenerate the result immediately, so the readout and strength
+	// meter always describe the settings on screen. Number fields commit on
+	// change (blur/Enter/steppers) so half-typed values don't flash errors;
+	// sliders and text fields update as they move.
+	a.bindLength("input-length", "input-length-range")
+	a.bindLength("input-strong-length", "input-strong-length-range")
+	a.bindLength("input-words", "input-words-range")
+	a.bindLength("input-pin-length", "input-pin-length-range")
+
+	for _, id := range []string{
+		"input-min-upper", "input-min-lower", "input-min-numbers", "input-min-symbols",
+		"select-wordlist",
+	} {
+		a.onChange(id, a.generate)
+	}
+	a.onInput("input-excluded", a.generate)
+	a.onInput("input-separator", a.generate)
 
 	for _, id := range []string{
 		"chk-upper", "chk-lower", "chk-numbers", "chk-symbols",
@@ -99,7 +106,7 @@ func (a *App) bindEvents() {
 		"chk-capitalize", "chk-add-number", "chk-add-symbol",
 		"chk-pin-repeated", "chk-pin-avoid-patterns",
 	} {
-		a.onChange(id, a.readAllControls)
+		a.onChange(id, a.generate)
 	}
 
 	a.onChange("theme-select", a.readTheme)
@@ -154,6 +161,20 @@ func (a *App) onInput(id string, fn func()) {
 		return nil
 	}))
 	el.Call("addEventListener", "input", handler)
+}
+
+// bindLength keeps a number field and its slider in step and regenerates.
+func (a *App) bindLength(numID, rangeID string) {
+	a.onChange(numID, func() {
+		if n, err := strconv.Atoi(a.stringValue(numID)); err == nil {
+			a.setValue(rangeID, strconv.Itoa(n)) // the browser clamps to the slider's range
+		}
+		a.generate()
+	})
+	a.onInput(rangeID, func() {
+		a.setValue(numID, a.stringValue(rangeID))
+		a.generate()
+	})
 }
 
 func (a *App) setMode(m mode) {
@@ -329,7 +350,7 @@ func (a *App) generate() {
 func (a *App) render(strength generator.StrengthResult) {
 	output := a.doc.Call("getElementById", "password-output")
 	if !output.IsNull() {
-		output.Set("textContent", a.output)
+		a.renderSecret(output, a.output)
 	}
 
 	errEl := a.doc.Call("getElementById", "validation-error")
@@ -342,29 +363,64 @@ func (a *App) render(strength generator.StrengthResult) {
 		}
 	}
 
-	strengthLabel := a.doc.Call("getElementById", "strength-label")
-	if !strengthLabel.IsNull() {
-		strengthLabel.Set("textContent", strength.Level.String())
+	// With no result (validation error) show an empty meter rather than a
+	// misleading "Very Weak".
+	level, levelWidth, bits := "—", 0, ""
+	if a.output != "" {
+		level = strength.Level.String()
+		levelWidth = strength.Level.BarWidth()
+		bits = fmt.Sprintf("~%.0f bits estimated entropy", strength.Entropy)
 	}
 
-	entropyEl := a.doc.Call("getElementById", "entropy-bits")
-	if !entropyEl.IsNull() {
+	if el := a.doc.Call("getElementById", "strength-label"); !el.IsNull() {
+		el.Set("textContent", level)
+	}
+	if el := a.doc.Call("getElementById", "entropy-bits"); !el.IsNull() {
+		el.Set("textContent", bits)
+	}
+	if bar := a.doc.Call("getElementById", "strength-bar"); !bar.IsNull() {
+		bar.Set("style", fmt.Sprintf("width: %d%%", levelWidth))
+		dataLevel := level
 		if a.output == "" {
-			entropyEl.Set("textContent", "")
-		} else {
-			entropyEl.Set("textContent", fmt.Sprintf("~%.0f bits estimated entropy", strength.Entropy))
+			dataLevel = ""
 		}
+		bar.Call("setAttribute", "data-level", dataLevel)
 	}
-
-	strengthBar := a.doc.Call("getElementById", "strength-bar")
-	if !strengthBar.IsNull() {
-		strengthBar.Set("style", fmt.Sprintf("width: %d%%", strength.Level.BarWidth()))
-		strengthBar.Call("setAttribute", "data-level", strength.Level.String())
+	if track := a.doc.Call("getElementById", "strength-track"); !track.IsNull() {
+		track.Call("setAttribute", "aria-valuenow", strconv.Itoa(levelWidth))
+		track.Call("setAttribute", "aria-valuetext", level)
 	}
 
 	genBtn := a.doc.Call("getElementById", "btn-generate")
 	if !genBtn.IsNull() {
 		genBtn.Set("disabled", false)
+	}
+	if copyBtn := a.doc.Call("getElementById", "btn-copy"); !copyBtn.IsNull() {
+		copyBtn.Set("disabled", a.output == "")
+	}
+}
+
+// renderSecret shows s in el as runs of letters, digits and symbols so digits
+// and symbols can be coloured. It only ever sets textContent on freshly
+// created spans, never HTML, and el.textContent stays exactly s.
+func (a *App) renderSecret(el js.Value, s string) {
+	el.Call("replaceChildren")
+	density := ""
+	if utf8.RuneCountInString(s) > 48 {
+		density = "long"
+	}
+	if density == "" {
+		el.Call("removeAttribute", "data-density")
+	} else {
+		el.Call("setAttribute", "data-density", density)
+	}
+	for _, r := range splitRuns(s) {
+		span := a.doc.Call("createElement", "span")
+		if cls := r.Kind.class(); cls != "" {
+			span.Set("className", cls)
+		}
+		span.Set("textContent", r.Text)
+		el.Call("appendChild", span)
 	}
 }
 
@@ -383,12 +439,16 @@ func (a *App) copyPassword() {
 	thenFn := a.retain(js.FuncOf(func(_ js.Value, _ []js.Value) interface{} {
 		if !btn.IsNull() {
 			btn.Set("textContent", "Copied!")
+			btn.Call("setAttribute", "data-state", "copied")
 		}
+		a.announce("Copied to clipboard.")
 		if a.copyReset.Type() == js.TypeUndefined {
 			a.copyReset = a.retain(js.FuncOf(func(_ js.Value, _ []js.Value) interface{} {
 				if !btn.IsNull() {
 					btn.Set("textContent", "Copy")
+					btn.Call("removeAttribute", "data-state")
 				}
+				a.announce("")
 				return nil
 			}))
 		}
@@ -400,6 +460,13 @@ func (a *App) copyPassword() {
 		return nil
 	}))
 	promise.Call("then", thenFn).Call("catch", catchFn)
+}
+
+// announce updates a visually hidden live region for screen-reader users.
+func (a *App) announce(msg string) {
+	if el := a.doc.Call("getElementById", "copy-announcer"); !el.IsNull() {
+		el.Set("textContent", msg)
+	}
 }
 
 func (a *App) setStatus(msg string) {
@@ -433,13 +500,11 @@ func (a *App) toggleAdvanced() {
 		el.Get("classList").Call("remove", "hidden")
 		if !btn.IsNull() {
 			btn.Call("setAttribute", "aria-expanded", "true")
-			btn.Set("textContent", "Advanced Options ▲")
 		}
 	} else {
 		el.Get("classList").Call("add", "hidden")
 		if !btn.IsNull() {
 			btn.Call("setAttribute", "aria-expanded", "false")
-			btn.Set("textContent", "Advanced Options ▼")
 		}
 	}
 }
@@ -500,6 +565,7 @@ func (a *App) intValue(id string, fallback int) int {
 
 func (a *App) setIntValue(id string, value int) {
 	a.setValue(id, strconv.Itoa(value))
+	a.setValue(id+"-range", strconv.Itoa(value)) // no-op for fields without a slider
 }
 
 // SetGitHubLink configures repository links from build constants.

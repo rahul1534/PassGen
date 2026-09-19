@@ -51,7 +51,7 @@ test.describe('PassForge generator', () => {
   test('validates options, exposes advanced controls, and resets defaults', async ({ page }) => {
     await waitForApplication(page);
 
-    await page.getByRole('button', { name: /Advanced Options/ }).click();
+    await page.getByRole('button', { name: /Advanced options/ }).click();
     await expect(page.locator('#advanced-panel')).toBeVisible();
     await expect(page.locator('#btn-advanced-toggle')).toHaveAttribute('aria-expanded', 'true');
 
@@ -157,7 +157,7 @@ test.describe('PassForge privacy guarantees (runtime)', () => {
 
   test('rejects negative minimum counts instead of over-long output', async ({ page }) => {
     await waitForApplication(page);
-    await page.getByRole('button', { name: /Advanced Options/ }).click();
+    await page.getByRole('button', { name: /Advanced options/ }).click();
 
     await page.locator('#input-length').fill('10');
     await page.locator('#input-min-upper').fill('30');
@@ -167,5 +167,107 @@ test.describe('PassForge privacy guarantees (runtime)', () => {
     await expect(page.locator('#validation-error')).toBeVisible();
     await expect(page.locator('#validation-error')).toContainText('cannot be negative');
     await expect(page.locator('#password-output')).toHaveText('');
+  });
+});
+
+
+test.describe('PassForge interface', () => {
+  test('regenerates as soon as an option changes', async ({ page }) => {
+    await waitForApplication(page);
+    await page.locator('#chk-symbols').uncheck();
+    await expect(page.locator('#password-output')).toHaveText(/^[A-Za-z0-9]{20}$/);
+    await page.locator('#chk-numbers').uncheck();
+    await expect(page.locator('#password-output')).toHaveText(/^[A-Za-z]{20}$/);
+  });
+
+  test('keeps the length slider and number field in step', async ({ page }) => {
+    await waitForApplication(page);
+
+    await page.locator('#input-length-range').fill('32');
+    await expect(page.locator('#input-length')).toHaveValue('32');
+    await expect(page.locator('#password-output')).toHaveText(/^.{32}$/);
+
+    await page.locator('#input-length').fill('40');
+    await page.locator('#input-length').press('Tab');
+    await expect(page.locator('#input-length-range')).toHaveValue('40');
+    await expect(page.locator('#password-output')).toHaveText(/^.{40}$/);
+
+    await page.getByRole('button', { name: 'Reset to defaults' }).click();
+    await expect(page.locator('#input-length')).toHaveValue('20');
+    await expect(page.locator('#input-length-range')).toHaveValue('20');
+  });
+
+  test('colours digits and symbols separately without changing the text', async ({ page }) => {
+    await waitForApplication(page);
+    await page.locator('#input-length').fill('64');
+    await page.locator('#input-length').press('Tab');
+    await expect(page.locator('#password-output')).toHaveText(/^.{64}$/);
+
+    const parts = await page.locator('#password-output > span').evaluateAll((spans) =>
+      spans.map((s) => ({ cls: s.className, text: s.textContent })));
+    expect(parts.length).toBeGreaterThan(1);
+    for (const { cls, text } of parts) {
+      if (cls === 'ch-digit') expect(text).toMatch(/^[0-9]+$/);
+      else if (cls === 'ch-symbol') expect(text).toMatch(/^[^A-Za-z0-9]+$/);
+      else expect(text).toMatch(/^[A-Za-z]+$/);
+    }
+    const joined = parts.map((p) => p.text).join('');
+    expect(await page.locator('#password-output').textContent()).toBe(joined);
+    expect(await page.locator('#password-output').evaluate((el) => el.innerHTML)).not.toContain('<script');
+  });
+
+  test('shows an empty strength meter when there is nothing to rate', async ({ page }) => {
+    await waitForApplication(page);
+    for (const id of ['chk-upper', 'chk-lower', 'chk-numbers', 'chk-symbols']) {
+      await page.locator(`#${id}`).uncheck();
+    }
+    await expect(page.locator('#validation-error')).toBeVisible();
+    await expect(page.locator('#strength-label')).toHaveText('—');
+    await expect(page.locator('#entropy-bits')).toHaveText('');
+    await expect(page.locator('#strength-bar')).toHaveAttribute('data-level', '');
+    await expect(page.locator('#strength-track')).toHaveAttribute('aria-valuenow', '0');
+  });
+
+  test('exposes the strength meter to assistive technology', async ({ page }) => {
+    await waitForApplication(page);
+    await expect(page.locator('#strength-track')).toHaveAttribute('aria-valuenow', /^[1-9]\d*$/);
+    await expect(page.locator('#strength-track')).toHaveAttribute('aria-valuetext', /\S/);
+  });
+
+  test('mode tabs show a visible keyboard focus ring', async ({ page }) => {
+    await waitForApplication(page);
+    await page.locator('#mode-random').focus();
+    await page.keyboard.press('ArrowRight'); // radio groups move focus with arrow keys
+    await expect(page.locator('#mode-strong')).toBeFocused();
+    await expect(page.locator('.mode:has(#mode-strong)')).toHaveCSS('outline-style', 'solid');
+  });
+
+  test('character chips show a visible keyboard focus ring', async ({ page }) => {
+    await waitForApplication(page);
+    await page.locator('#chk-upper').focus();
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#chk-upper')).toBeFocused();
+    await expect(page.locator('.chip:has(#chk-upper)')).toHaveCSS('outline-style', 'solid');
+  });
+
+  test('marks the copy button while the copy confirmation is showing', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await waitForApplication(page);
+    await page.getByRole('button', { name: 'Copy' }).click();
+    await expect(page.locator('#btn-copy')).toHaveAttribute('data-state', 'copied');
+    await expect(page.locator('#copy-announcer')).toHaveText('Copied to clipboard.');
+    await expect(page.locator('#btn-copy')).not.toHaveAttribute('data-state', 'copied', { timeout: 5000 });
+    await expect(page.locator('#btn-copy')).toHaveText('Copy');
+  });
+
+  test('has no horizontal overflow on a phone-sized screen', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await waitForApplication(page);
+    await page.locator('#input-length').fill('128');
+    await page.locator('#input-length').press('Tab');
+    await expect(page.locator('#password-output')).toHaveText(/^.{128}$/);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 });

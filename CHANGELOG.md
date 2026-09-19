@@ -4,6 +4,18 @@ All notable changes to PassForge are documented in this file.
 
 ## Unreleased
 
+### Changed
+- Redesigned interface: light-first layout with a segmented mode selector, a large colour-coded readout (digits blue, symbols orange), a five-segment strength meter, character-type chips that double as a colour legend, and sentence-case copy throughout
+- Length, word-count and PIN-length controls now have sliders synced with their number fields
+- Options and sliders regenerate the result immediately (Generate and Ctrl/⌘+Enter still create a new one)
+- The strength meter is empty (not "Very Weak") when there is no result; Copy is disabled until there is one
+- Typography uses the system font stacks only: no font downloads, no new binary assets
+
+### Accessibility
+- Mode tabs and character chips now show a visible keyboard focus ring (previously the visually hidden radio inputs swallowed it)
+- The strength meter exposes `aria-valuenow`/`aria-valuetext`; the readout has an accessible name; copying is announced to screen readers
+- Fixed low contrast on the copied-state and hover styles (hover no longer fades the label with opacity)
+
 ### Security
 - Removed the Cloudflare Web Analytics beacon and the CSP allowances added for it; `script-src` and `connect-src` are same-origin again, matching the "no analytics / nothing sent to a server" guarantees
 - Dropped `'unsafe-eval'` from the CSP (only `'wasm-unsafe-eval'` is required)
