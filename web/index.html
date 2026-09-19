@@ -9,7 +9,7 @@
     - connect-src 'self': allows fetch of local app.wasm only; blocks third-party exfiltration.
     - No CDN scripts/fonts; all assets are same-origin.
   -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
   <title>PassForge — Secure Password Generator</title>
   <meta name="description" content="Generate secure passwords and passphrases locally in your browser.">
   <meta property="og:title" content="PassForge — Secure Password Generator">
@@ -200,7 +200,6 @@
     </div>
   </footer>
 
-  <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "f75d4edf7e454ef6b7b7e13029bfa219"}'></script><!-- End Cloudflare Web Analytics -->
   <script src="./wasm_exec.js"></script>
   <script src="./app.js"></script>
 </body>
