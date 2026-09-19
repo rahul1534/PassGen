@@ -15,6 +15,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Privacy regression checks (privacy + CSP policy)
+        run: bash scripts/privacy-check.sh
+
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
@@ -54,12 +57,6 @@ jobs:
 
       - name: UI tests
         run: make test-ui
-
-      - name: Install ripgrep
-        run: sudo apt-get update && sudo apt-get install -y ripgrep
-
-      - name: Privacy regression checks
-        run: bash scripts/privacy-check.sh
 
   security:
     runs-on: ubuntu-latest
