@@ -82,7 +82,7 @@ Primary language:
 Target Go version:
 
 ```text
-Go 1.26+
+Go 1.27+
 ```
 
 The implementation should avoid unnecessary third-party dependencies.
